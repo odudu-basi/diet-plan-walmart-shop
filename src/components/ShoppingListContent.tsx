@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ShoppingListItem from './ShoppingListItem';
+import { Badge } from "@/components/ui/badge";
 
 interface ShoppingListItemData {
   id: string;
@@ -21,6 +22,7 @@ interface ShoppingListContentProps {
 
 const ShoppingListContent = ({ items, onItemToggle }: ShoppingListContentProps) => {
   const totalItems = items?.length || 0;
+  const totalCost = items?.reduce((sum, item) => sum + item.estimated_cost, 0) || 0;
 
   if (totalItems === 0) {
     return (
@@ -38,22 +40,46 @@ const ShoppingListContent = ({ items, onItemToggle }: ShoppingListContentProps) 
 
   return (
     <div className="space-y-4">
-      {Object.entries(groupedItems).map(([category, categoryItems]) => (
-        <div key={category} className="space-y-2">
-          <h4 className="font-medium text-gray-700 text-sm uppercase tracking-wide border-b pb-1">
-            {category}
-          </h4>
-          <div className="space-y-2">
-            {categoryItems.map((item) => (
-              <ShoppingListItem 
-                key={item.id} 
-                item={item} 
-                onToggle={onItemToggle}
-              />
-            ))}
-          </div>
+      {/* Total cost summary */}
+      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-blue-900">
+            Estimated Walmart Total:
+          </span>
+          <Badge className="bg-blue-600 text-white">
+            ${totalCost.toFixed(2)}
+          </Badge>
         </div>
-      ))}
+        <p className="text-xs text-blue-700 mt-1">
+          Prices may vary by location and availability
+        </p>
+      </div>
+
+      {Object.entries(groupedItems).map(([category, categoryItems]) => {
+        const categoryTotal = categoryItems.reduce((sum, item) => sum + item.estimated_cost, 0);
+        
+        return (
+          <div key={category} className="space-y-2">
+            <div className="flex items-center justify-between border-b pb-1">
+              <h4 className="font-medium text-gray-700 text-sm uppercase tracking-wide">
+                {category}
+              </h4>
+              <Badge variant="outline" className="text-xs">
+                ${categoryTotal.toFixed(2)}
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              {categoryItems.map((item) => (
+                <ShoppingListItem 
+                  key={item.id} 
+                  item={item} 
+                  onToggle={onItemToggle}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

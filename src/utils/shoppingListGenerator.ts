@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { convertToWalmartPackaging } from './walmartPricing';
 
 export interface MealPlanIngredient {
   ingredient_name: string;
@@ -15,6 +16,11 @@ export interface ConsolidatedIngredient {
   unit: string;
   category: string;
   estimatedCost: number;
+  walmartPackaging?: {
+    packageDescription: string;
+    estimatedCost: number;
+    quantity: number;
+  };
 }
 
 export const generateShoppingListFromMealPlan = async (
@@ -22,7 +28,7 @@ export const generateShoppingListFromMealPlan = async (
   userId: string,
   listName?: string
 ): Promise<string> => {
-  console.log('Generating shopping list for meal plan:', mealPlanId);
+  console.log('Generating Walmart-optimized shopping list for meal plan:', mealPlanId);
 
   // Fetch all meals and their ingredients for the meal plan
   const { data: meals, error: mealsError } = await supabase
@@ -73,9 +79,9 @@ export const generateShoppingListFromMealPlan = async (
     throw new Error('No ingredients found in the meal plan');
   }
 
-  // Consolidate ingredients by name and unit
-  const consolidatedIngredients = consolidateIngredients(allIngredients);
-  console.log(`Consolidated to ${consolidatedIngredients.length} unique ingredients`);
+  // Consolidate ingredients and convert to Walmart packaging
+  const consolidatedIngredients = consolidateIngredientsWithWalmart(allIngredients);
+  console.log(`Consolidated to ${consolidatedIngredients.length} unique Walmart items`);
 
   // Get meal plan name for the shopping list
   const { data: mealPlan } = await supabase
@@ -84,7 +90,7 @@ export const generateShoppingListFromMealPlan = async (
     .eq('id', mealPlanId)
     .single();
 
-  const shoppingListName = listName || `${mealPlan?.name || 'Meal Plan'} - Shopping List`;
+  const shoppingListName = listName || `${mealPlan?.name || 'Meal Plan'} - Walmart Shopping List`;
 
   // Create the shopping list
   const { data: shoppingList, error: listError } = await supabase
@@ -102,18 +108,18 @@ export const generateShoppingListFromMealPlan = async (
     throw new Error('Failed to create shopping list');
   }
 
-  console.log('Created shopping list:', shoppingList.id);
+  console.log('Created Walmart shopping list:', shoppingList.id);
 
-  // Add all consolidated ingredients to the shopping list
+  // Add all consolidated ingredients to the shopping list with Walmart packaging
   const shoppingListItems = consolidatedIngredients.map(ingredient => ({
     shopping_list_id: shoppingList.id,
     ingredient_name: ingredient.name,
-    quantity: ingredient.totalQuantity,
-    unit: ingredient.unit,
+    quantity: ingredient.walmartPackaging?.quantity || ingredient.totalQuantity,
+    unit: ingredient.walmartPackaging ? 'package' : ingredient.unit,
     category: ingredient.category,
-    estimated_cost: ingredient.estimatedCost,
+    estimated_cost: ingredient.walmartPackaging?.estimatedCost || ingredient.estimatedCost,
     is_purchased: false,
-    notes: ''
+    notes: ingredient.walmartPackaging?.packageDescription || ''
   }));
 
   const { error: itemsError } = await supabase
@@ -125,12 +131,12 @@ export const generateShoppingListFromMealPlan = async (
     throw new Error('Failed to add items to shopping list');
   }
 
-  console.log(`Added ${shoppingListItems.length} items to shopping list`);
+  console.log(`Added ${shoppingListItems.length} Walmart items to shopping list`);
 
   return shoppingList.id;
 };
 
-const consolidateIngredients = (ingredients: MealPlanIngredient[]): ConsolidatedIngredient[] => {
+const consolidateIngredientsWithWalmart = (ingredients: MealPlanIngredient[]): ConsolidatedIngredient[] => {
   const consolidated = new Map<string, ConsolidatedIngredient>();
 
   ingredients.forEach(ingredient => {
@@ -141,12 +147,20 @@ const consolidateIngredients = (ingredients: MealPlanIngredient[]): Consolidated
       existing.totalQuantity += ingredient.quantity;
       existing.estimatedCost += ingredient.estimated_cost;
     } else {
+      // Convert to Walmart packaging
+      const walmartPackaging = convertToWalmartPackaging(
+        ingredient.ingredient_name,
+        ingredient.quantity,
+        ingredient.unit
+      );
+      
       consolidated.set(key, {
         name: ingredient.ingredient_name,
         totalQuantity: ingredient.quantity,
         unit: ingredient.unit,
         category: ingredient.category,
-        estimatedCost: ingredient.estimated_cost
+        estimatedCost: ingredient.estimated_cost,
+        walmartPackaging
       });
     }
   });
