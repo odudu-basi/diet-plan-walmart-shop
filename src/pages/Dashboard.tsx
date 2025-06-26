@@ -1,32 +1,18 @@
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Plus, User, Utensils, ShoppingCart, Target, Clock, Eye } from "lucide-react";
+import { ChefHat, ShoppingCart, User, Plus, Calendar, List } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
-  // Fetch user profile
-  const { data: profile } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user
-  });
+  const { toast } = useToast();
 
   // Fetch user's meal plans
   const { data: mealPlans, isLoading: mealPlansLoading } = useQuery({
@@ -35,12 +21,10 @@ const Dashboard = () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('meal_plans')
-        .select(`
-          *,
-          meals (count)
-        `)
+        .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(3);
       
       if (error) throw error;
       return data;
@@ -48,13 +32,51 @@ const Dashboard = () => {
     enabled: !!user
   });
 
+  // Fetch user's shopping lists
+  const { data: shoppingLists, isLoading: shoppingListsLoading } = useQuery({
+    queryKey: ['shopping-lists-summary', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select(`
+          *,
+          shopping_list_items (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user
+  });
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Logout failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Please log in</h2>
-          <p className="text-gray-600">You need to be logged in to access the dashboard.</p>
-          <Button onClick={() => navigate('/')} className="mt-4">
+          <p className="text-gray-600 mb-4">You need to be logged in to view the dashboard.</p>
+          <Button onClick={() => navigate('/')} className="w-full">
             Go to Login
           </Button>
         </div>
@@ -63,176 +85,180 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      {/* Mobile Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="flex items-center justify-between p-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Welcome back!</h1>
-            <p className="text-gray-600 mt-1">
-              {profile?.first_name && profile?.last_name 
-                ? `${profile.first_name} ${profile.last_name}` 
-                : 'Ready to plan your meals?'}
-            </p>
+            <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
+            <p className="text-sm text-gray-500">Welcome back, {user.email?.split('@')[0]}</p>
           </div>
-          <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/profile-setup')}
-              className="flex items-center space-x-2"
-            >
-              <User className="h-4 w-4" />
-              <span>Profile</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={logout}
-              className="text-red-600 hover:text-red-700"
-            >
-              Sign Out
-            </Button>
-          </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate('/profile-setup')}
+            className="rounded-full"
+          >
+            <User className="h-5 w-5" />
+          </Button>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/meal-plan-generator')}>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-green-700">
-                <Plus className="h-5 w-5" />
-                <span>Generate Meal Plan</span>
-              </CardTitle>
-              <CardDescription>Create a new AI-powered meal plan</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/shopping-list')}>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-blue-700">
-                <ShoppingCart className="h-5 w-5" />
-                <span>Shopping Lists</span>
-              </CardTitle>
-              <CardDescription>Manage your shopping lists</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/profile-setup')}>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-purple-700">
-                <Target className="h-5 w-5" />
-                <span>Update Goals</span>
-              </CardTitle>
-              <CardDescription>Modify your health and diet goals</CardDescription>
-            </CardHeader>
-          </Card>
+      <div className="p-4 space-y-6 pb-20">
+        {/* Quick Actions - Mobile Optimized */}
+        <div className="grid grid-cols-2 gap-3">
+          <Button 
+            onClick={() => navigate('/meal-plan-generator')}
+            className="h-20 flex-col gap-2 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-lg"
+            size="lg"
+          >
+            <Plus className="h-6 w-6" />
+            <span className="text-sm font-medium">New Plan</span>
+          </Button>
+          <Button 
+            onClick={() => navigate('/shopping-list')}
+            variant="outline"
+            className="h-20 flex-col gap-2 border-2 border-blue-200 hover:bg-blue-50 rounded-xl shadow-lg"
+            size="lg"
+          >
+            <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <span className="text-sm font-medium text-blue-600">Shopping</span>
+          </Button>
         </div>
-
-        {/* Profile Summary */}
-        {profile && (
-          <Card className="shadow-lg mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-green-600" />
-                <span>Your Profile</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-gray-600">Goal</p>
-                  <p className="capitalize">{profile.goal?.replace('-', ' ') || 'Not set'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-600">Activity Level</p>
-                  <p className="capitalize">{profile.activity_level || 'Not set'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-600">Age</p>
-                  <p>{profile.age ? `${profile.age} years` : 'Not set'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-600">Weight</p>
-                  <p>{profile.weight ? `${profile.weight} lbs` : 'Not set'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Recent Meal Plans */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <CalendarDays className="h-5 w-5 text-green-600" />
-              <span>Your Meal Plans</span>
-            </CardTitle>
-            <CardDescription>Your recent meal plans and progress</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {mealPlansLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading meal plans...</p>
-              </div>
-            ) : mealPlans && mealPlans.length > 0 ? (
-              <div className="space-y-4">
-                {mealPlans.map((plan) => (
-                  <div key={plan.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <Utensils className="h-5 w-5 text-green-600" />
-                        <div>
-                          <h3 className="font-semibold text-gray-800">{plan.name}</h3>
-                          <p className="text-sm text-gray-600">{plan.description}</p>
-                          <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
-                            <span className="flex items-center">
-                              <CalendarDays className="h-3 w-3 mr-1" />
-                              {new Date(plan.start_date).toLocaleDateString()} - {new Date(plan.end_date).toLocaleDateString()}
-                            </span>
-                            <span className="flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Created {new Date(plan.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">Recent Meal Plans</h2>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/meal-plan-generator')}
+              className="text-green-600 hover:text-green-700"
+            >
+              View All
+            </Button>
+          </div>
+          
+          {mealPlansLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : mealPlans && mealPlans.length > 0 ? (
+            <div className="space-y-3">
+              {mealPlans.map((plan) => (
+                <Card 
+                  key={plan.id} 
+                  className="shadow-sm border-l-4 border-l-green-500 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/meal-plan/${plan.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">{plan.name}</h3>
+                        <p className="text-sm text-gray-500 flex items-center mt-1">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {new Date(plan.created_at).toLocaleDateString()}
+                        </p>
                       </div>
+                      <ChefHat className="h-5 w-5 text-green-600 flex-shrink-0" />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        plan.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {plan.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                      <Button 
-                        size="sm"
-                        onClick={() => navigate(`/meal-plan/${plan.id}`)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Utensils className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">No Meal Plans Yet</h3>
-                <p className="text-gray-500 mb-4">Create your first AI-powered meal plan to get started!</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-dashed border-2 border-gray-200">
+              <CardContent className="p-6 text-center">
+                <ChefHat className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-gray-600 mb-2">No meal plans yet</h3>
+                <p className="text-xs text-gray-500 mb-4">Create your first meal plan to get started</p>
                 <Button 
                   onClick={() => navigate('/meal-plan-generator')}
-                  className="bg-green-600 hover:bg-green-700"
+                  size="sm"
+                  className="w-full"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Meal Plan
+                  Create Meal Plan
                 </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Recent Shopping Lists */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">Shopping Lists</h2>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/shopping-list')}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              View All
+            </Button>
+          </div>
+          
+          {shoppingListsLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : shoppingLists && shoppingLists.length > 0 ? (
+            <div className="space-y-3">
+              {shoppingLists.map((list) => (
+                <Card 
+                  key={list.id} 
+                  className="shadow-sm border-l-4 border-l-blue-500 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate('/shopping-list')}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">{list.name}</h3>
+                        <p className="text-sm text-gray-500 flex items-center mt-1">
+                          <List className="h-4 w-4 mr-1" />
+                          {list.shopping_list_items?.length || 0} items
+                        </p>
+                      </div>
+                      <ShoppingCart className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-dashed border-2 border-gray-200">
+              <CardContent className="p-6 text-center">
+                <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-gray-600 mb-2">No shopping lists yet</h3>
+                <p className="text-xs text-gray-500 mb-4">Create your first shopping list</p>
+                <Button 
+                  onClick={() => navigate('/shopping-list')}
+                  size="sm"
+                  className="w-full"
+                  variant="outline"
+                >
+                  Create Shopping List
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Logout Button */}
+        <div className="pt-4">
+          <Button 
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full h-12 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+          >
+            Logout
+          </Button>
+        </div>
       </div>
     </div>
   );

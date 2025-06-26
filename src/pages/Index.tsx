@@ -14,7 +14,7 @@ const Index = () => {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -31,41 +31,41 @@ const Index = () => {
   // Otherwise show the authentication forms
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 flex flex-col">
-      {/* Header */}
-      <div className="text-center py-8">
-        <div className="flex justify-center items-center mb-4">
-          <div className="bg-green-500 p-3 rounded-full mr-3">
-            <ShoppingCart className="h-8 w-8 text-white" />
+      {/* Mobile-Optimized Header */}
+      <div className="text-center py-8 px-4">
+        <div className="flex justify-center items-center mb-6">
+          <div className="bg-green-500 p-3 rounded-full mr-2">
+            <ShoppingCart className="h-6 w-6 text-white" />
           </div>
-          <div className="bg-blue-500 p-3 rounded-full mr-3">
-            <Target className="h-8 w-8 text-white" />
+          <div className="bg-blue-500 p-3 rounded-full mr-2">
+            <Target className="h-6 w-6 text-white" />
           </div>
           <div className="bg-red-500 p-3 rounded-full">
-            <Heart className="h-8 w-8 text-white" />
+            <Heart className="h-6 w-6 text-white" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Diet Shopping</h1>
-        <p className="text-gray-600 text-lg">Your personal meal planning companion</p>
-        <p className="text-gray-500 text-sm mt-2">AI-powered meal plans & smart shopping lists</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-3">Diet Shopping</h1>
+        <p className="text-gray-600 text-lg mb-2">Your personal meal planning companion</p>
+        <p className="text-gray-500 text-sm">AI-powered meal plans & smart shopping lists</p>
       </div>
 
-      {/* Authentication Card */}
-      <div className="flex-1 flex items-center justify-center">
+      {/* Mobile-Optimized Authentication Card */}
+      <div className="flex-1 flex items-start justify-center px-4">
         <Card className="w-full max-w-md mx-auto shadow-lg">
-          <CardHeader className="text-center">
+          <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-semibold">Welcome</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               Sign in to access your personalized meal plans
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pb-6">
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Log In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 h-12">
+                <TabsTrigger value="login" className="text-base">Log In</TabsTrigger>
+                <TabsTrigger value="signup" className="text-base">Sign Up</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="login">
+              <TabsContent value="login" className="mt-0">
                 <LoginForm 
                   onLogin={login}
                   isLoading={isLoading}
@@ -73,7 +73,7 @@ const Index = () => {
                 />
               </TabsContent>
 
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="mt-0">
                 <SignUpForm 
                   onSignUp={signUp}
                   isLoading={isLoading}
@@ -85,9 +85,9 @@ const Index = () => {
         </Card>
       </div>
 
-      {/* Footer */}
-      <div className="text-center py-4">
-        <p className="text-gray-500 text-sm">
+      {/* Mobile-Optimized Footer */}
+      <div className="text-center py-6 px-4">
+        <p className="text-gray-500 text-sm leading-relaxed">
           Transform your shopping experience with personalized meal planning
         </p>
       </div>
