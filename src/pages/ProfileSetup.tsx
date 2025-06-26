@@ -23,6 +23,7 @@ const ProfileSetup = () => {
     lastName: '',
     age: '',
     weight: '',
+    targetWeight: '',
     height: '',
     goal: '',
     activityLevel: '',
@@ -65,6 +66,7 @@ const ProfileSetup = () => {
             lastName: data.last_name || '',
             age: data.age?.toString() || '',
             weight: data.weight?.toString() || '',
+            targetWeight: data.target_weight?.toString() || '',
             height: data.height?.toString() || '',
             goal: data.goal || '',
             activityLevel: data.activity_level || '',
@@ -111,6 +113,7 @@ const ProfileSetup = () => {
         last_name: formData.lastName,
         age: formData.age ? parseInt(formData.age) : null,
         weight: formData.weight ? parseFloat(formData.weight) : null,
+        target_weight: formData.targetWeight ? parseFloat(formData.targetWeight) : null,
         height: formData.height ? parseFloat(formData.height) : null,
         goal: formData.goal,
         activity_level: formData.activityLevel,
@@ -206,7 +209,7 @@ const ProfileSetup = () => {
               </div>
 
               {/* Physical Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="age">Age</Label>
                   <Input
@@ -218,13 +221,23 @@ const ProfileSetup = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="weight">Weight (lbs)</Label>
+                  <Label htmlFor="weight">Current Weight (lbs)</Label>
                   <Input
                     id="weight"
                     type="number"
                     value={formData.weight}
                     onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetWeight">Target Weight (lbs)</Label>
+                  <Input
+                    id="targetWeight"
+                    type="number"
+                    value={formData.targetWeight}
+                    onChange={(e) => setFormData(prev => ({ ...prev, targetWeight: e.target.value }))}
+                    placeholder="Optional"
                   />
                 </div>
                 <div className="space-y-2">
@@ -273,7 +286,6 @@ const ProfileSetup = () => {
                 </div>
               </div>
 
-              {/* Dietary Restrictions */}
               <div className="space-y-3">
                 <Label className="flex items-center space-x-2">
                   <Apple className="h-4 w-4" />
@@ -295,7 +307,6 @@ const ProfileSetup = () => {
                 </div>
               </div>
 
-              {/* Allergies */}
               <div className="space-y-2">
                 <Label htmlFor="allergies">Food Allergies or Intolerances</Label>
                 <Textarea
@@ -306,7 +317,6 @@ const ProfileSetup = () => {
                 />
               </div>
 
-              {/* Budget */}
               <div className="space-y-2">
                 <Label>Weekly Grocery Budget</Label>
                 <Select value={formData.budgetRange} onValueChange={(value) => setFormData(prev => ({ ...prev, budgetRange: value }))}>
