@@ -1,13 +1,11 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit, ChevronDown, ChevronUp, Calendar, List } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ShoppingListHeader from './ShoppingListHeader';
+import ShoppingListContent from './ShoppingListContent';
 
 interface ShoppingListItem {
   id: string;
@@ -86,114 +84,27 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
     }
   };
 
-  const groupedItems = shoppingList.shopping_list_items?.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, ShoppingListItem[]>) || {};
-
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <CardTitle className="text-lg truncate">{shoppingList.name}</CardTitle>
-                  <Badge variant={progressPercentage === 100 ? "default" : "secondary"}>
-                    {progressPercentage}% complete
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <List className="h-4 w-4" />
-                    <span>{totalItems} items</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(shoppingList.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-                  <div 
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 ml-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteList();
-                  }}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <div className="p-2">
-                  {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </div>
-              </div>
-            </div>
-          </CardHeader>
+          <ShoppingListHeader
+            name={shoppingList.name}
+            totalItems={totalItems}
+            purchasedItems={purchasedItems}
+            progressPercentage={progressPercentage}
+            createdAt={shoppingList.created_at}
+            isOpen={isOpen}
+            onDelete={handleDeleteList}
+          />
         </CollapsibleTrigger>
 
         <CollapsibleContent>
           <CardContent className="pt-0">
-            {totalItems === 0 ? (
-              <p className="text-gray-500 text-center py-4">No items in this list</p>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(groupedItems).map(([category, items]) => (
-                  <div key={category} className="space-y-2">
-                    <h4 className="font-medium text-gray-700 text-sm uppercase tracking-wide border-b pb-1">
-                      {category}
-                    </h4>
-                    <div className="space-y-2">
-                      {items.map((item) => (
-                        <div 
-                          key={item.id} 
-                          className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                            item.is_purchased 
-                              ? 'bg-green-50 border-green-200' 
-                              : 'bg-white border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          <Checkbox
-                            checked={item.is_purchased}
-                            onCheckedChange={(checked) => 
-                              handleItemToggle(item.id, checked as boolean)
-                            }
-                            className="flex-shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <span 
-                              className={`block truncate ${
-                                item.is_purchased 
-                                  ? 'line-through text-gray-500' 
-                                  : 'text-gray-900'
-                              }`}
-                            >
-                              {item.ingredient_name}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {item.quantity} {item.unit}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <ShoppingListContent
+              items={shoppingList.shopping_list_items || []}
+              onItemToggle={handleItemToggle}
+            />
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
