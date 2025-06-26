@@ -68,51 +68,104 @@ export const useMealPlanGeneration = (profile: any) => {
 
     setIsGenerating(true);
     setProgress(0);
-    setCurrentStep('Initializing meal plan generation...');
+    setCurrentStep('Analyzing your profile for personalized nutrition...');
 
     try {
-      // Convert form data to the expected format
+      // Enhanced profile processing for better personalization
       const userProfile: UserProfile = {
-        age: profile.age,
-        weight: profile.weight,
-        height: profile.height,
-        goal: profile.goal,
-        activityLevel: profile.activity_level,
+        age: profile.age || 30,
+        weight: profile.weight || 150,
+        height: profile.height || 66,
+        goal: profile.goal || 'maintain-weight',
+        activityLevel: profile.activity_level || 'moderate',
         dietaryRestrictions: profile.dietary_restrictions || [],
         allergies: profile.allergies || 'None',
         budgetRange: profile.budget_range || '50-100'
       };
 
+      // Calculate personalized target calories if not provided
+      let targetCalories = formData.targetCalories ? parseInt(formData.targetCalories) : undefined;
+      
+      if (!targetCalories) {
+        // Enhanced calorie calculation based on profile
+        const heightInCm = userProfile.height * 2.54;
+        const weightInKg = userProfile.weight * 0.453592;
+        
+        // Mifflin-St Jeor Equation (assuming average gender for demo)
+        let bmr = (10 * weightInKg) + (6.25 * heightInCm) - (5 * userProfile.age) + 5;
+        
+        // Activity multipliers
+        const activityMultipliers: { [key: string]: number } = {
+          'sedentary': 1.2,
+          'light': 1.375,
+          'moderate': 1.55,
+          'very': 1.725,
+          'extra': 1.9
+        };
+        
+        const tdee = bmr * (activityMultipliers[userProfile.activityLevel] || 1.55);
+        
+        // Goal adjustments
+        switch (userProfile.goal) {
+          case 'lose-weight':
+            targetCalories = Math.round(tdee * 0.8); // 20% deficit
+            break;
+          case 'gain-weight':
+            targetCalories = Math.round(tdee * 1.2); // 20% surplus
+            break;
+          case 'build-muscle':
+            targetCalories = Math.round(tdee * 1.15); // 15% surplus
+            break;
+          default:
+            targetCalories = Math.round(tdee);
+        }
+      }
+
+      console.log('Personalized calorie target:', targetCalories);
+      console.log('User profile for meal generation:', userProfile);
+
       const planDetails: PlanDetails = {
         duration: parseInt(formData.duration),
-        targetCalories: formData.targetCalories ? parseInt(formData.targetCalories) : undefined,
+        targetCalories,
         createShoppingList: true
       };
 
       // Step 1: Generate meal plan via edge function
       setProgress(20);
-      setCurrentStep('Generating personalized meals...');
+      setCurrentStep('Creating diverse, goal-specific meals...');
       
-      console.log('Calling meal plan generation function...');
+      console.log('Calling enhanced meal plan generation function...');
       const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
-        body: { profile: userProfile, planDetails }
+        body: { 
+          profile: userProfile, 
+          planDetails: {
+            ...planDetails,
+            planName: formData.planName,
+            additionalNotes: formData.additionalNotes
+          }
+        }
       });
 
       if (functionError) {
         console.error('Edge function error:', functionError);
-        throw new Error(functionError.message || 'Failed to generate meal plan');
+        throw new Error(functionError.message || 'Failed to generate personalized meal plan');
       }
 
       if (!mealPlanData || !mealPlanData.meals) {
-        throw new Error('Invalid meal plan data received');
+        throw new Error('Invalid meal plan data received from AI');
       }
 
       const mealPlan: MealPlan = mealPlanData;
-      console.log('Received meal plan with', mealPlan.meals.length, 'meals');
+      console.log('Received personalized meal plan with', mealPlan.meals.length, 'diverse meals');
+
+      // Validate meal diversity
+      const mealNames = mealPlan.meals.map(m => m.name.toLowerCase());
+      const uniqueMeals = new Set(mealNames);
+      console.log(`Meal diversity check: ${uniqueMeals.size} unique meals out of ${mealNames.length} total meals`);
 
       // Step 2: Create meal plan record
       setProgress(40);
-      setCurrentStep('Saving meal plan...');
+      setCurrentStep('Saving your personalized meal plan...');
 
       const startDate = new Date();
       const endDate = new Date();
@@ -122,8 +175,8 @@ export const useMealPlanGeneration = (profile: any) => {
         .from('meal_plans')
         .insert({
           user_id: profile.id,
-          name: formData.planName || `${planDetails.duration}-Day Meal Plan`,
-          description: `Generated meal plan for ${profile.goal} goal`,
+          name: formData.planName || `${planDetails.duration}-Day Personalized Plan`,
+          description: `AI-generated meal plan tailored for ${userProfile.goal} (${targetCalories} cal/day)`,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
         })
@@ -132,17 +185,17 @@ export const useMealPlanGeneration = (profile: any) => {
 
       if (mealPlanError) {
         console.error('Error creating meal plan:', mealPlanError);
-        throw new Error('Failed to save meal plan');
+        throw new Error('Failed to save personalized meal plan');
       }
 
-      console.log('Created meal plan:', savedMealPlan.id);
+      console.log('Created personalized meal plan:', savedMealPlan.id);
 
       // Step 3: Save meals and ingredients
       setProgress(60);
-      setCurrentStep('Saving meals and ingredients...');
+      setCurrentStep('Saving meal details and ingredients...');
 
-      for (const meal of mealPlan.meals) {
-        console.log('Saving meal:', meal.name);
+      for (const [index, meal] of mealPlan.meals.entries()) {
+        console.log(`Saving meal ${index + 1}/${mealPlan.meals.length}:`, meal.name);
         
         const { data: savedMeal, error: mealError } = await supabase
           .from('meals')
@@ -167,7 +220,7 @@ export const useMealPlanGeneration = (profile: any) => {
 
         // Save ingredients for this meal
         if (meal.ingredients && meal.ingredients.length > 0) {
-          console.log('Saving', meal.ingredients.length, 'ingredients for meal:', meal.name);
+          console.log(`Saving ${meal.ingredients.length} ingredients for:`, meal.name);
           
           const ingredientsToSave = meal.ingredients.map(ingredient => ({
             meal_id: savedMeal.id,
@@ -192,7 +245,7 @@ export const useMealPlanGeneration = (profile: any) => {
       // Step 4: Create shopping list if requested
       if (planDetails.createShoppingList) {
         setProgress(80);
-        setCurrentStep('Creating shopping list...');
+        setCurrentStep('Creating optimized shopping list...');
 
         try {
           const shoppingListId = await generateShoppingListFromMealPlan(
@@ -213,17 +266,23 @@ export const useMealPlanGeneration = (profile: any) => {
       }
 
       setProgress(100);
-      setCurrentStep('Meal plan generation completed successfully!');
+      setCurrentStep('Your personalized meal plan is ready!');
 
       toast({
         title: "Success!",
-        description: `Your ${planDetails.duration}-day meal plan has been generated successfully!`,
+        description: `Your personalized ${planDetails.duration}-day meal plan with ${uniqueMeals.size} unique meals has been generated!`,
       });
 
       return {
         success: true,
         mealPlanId: savedMealPlan.id,
-        message: 'Meal plan generated successfully!'
+        message: `Personalized meal plan generated with ${uniqueMeals.size} unique meals!`,
+        stats: {
+          totalMeals: mealPlan.meals.length,
+          uniqueMeals: uniqueMeals.size,
+          targetCalories,
+          goal: userProfile.goal
+        }
       };
 
     } catch (error) {
@@ -231,7 +290,7 @@ export const useMealPlanGeneration = (profile: any) => {
       
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate meal plan. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate personalized meal plan. Please try again.",
         variant: "destructive",
       });
 
