@@ -1,280 +1,224 @@
 
 import { useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { generateShoppingListFromMealPlan } from '@/utils/shoppingListGenerator';
 
-interface MealPlanFormData {
-  planName: string;
-  duration: string;
-  targetCalories: string;
-  additionalNotes: string;
+export interface UserProfile {
+  age: number;
+  weight: number;
+  height: number;
+  goal: string;
+  activityLevel: string;
+  dietaryRestrictions: string[];
+  allergies: string;
+  budgetRange: string;
 }
 
-interface Profile {
-  age?: number;
-  weight?: number;
-  height?: number;
-  goal?: string;
-  activity_level?: string;
-  dietary_restrictions?: string[];
-  allergies?: string;
-  budget_range?: string;
+export interface PlanDetails {
+  duration: number;
+  targetCalories?: number;
+  createShoppingList: boolean;
 }
 
-export const useMealPlanGeneration = (profile: Profile | null) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useAuth();
+export interface Meal {
+  name: string;
+  type: string;
+  dayOfWeek: number;
+  instructions: string;
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  calories: number;
+  ingredients: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    category: string;
+    estimatedCost: number;
+  }>;
+}
+
+export interface MealPlan {
+  meals: Meal[];
+}
+
+export const useMealPlanGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState('');
+  const { toast } = useToast();
 
-  const generateMealPlan = async (formData: MealPlanFormData) => {
-    console.log('Form submitted with data:', formData);
-    
-    if (!user || !profile) {
-      console.log('Missing user or profile:', { user: !!user, profile: !!profile });
-      toast({
-        title: "Error",
-        description: "Please complete your profile setup first.",
-        variant: "destructive",
-      });
-      navigate('/profile-setup');
-      return;
-    }
-
-    // Validate required fields
-    if (!formData.planName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a meal plan name.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const generateMealPlan = async (
+    profile: UserProfile,
+    planDetails: PlanDetails,
+    userId: string
+  ) => {
     setIsGenerating(true);
-    console.log('Starting meal plan generation...');
+    setProgress(0);
+    setCurrentStep('Initializing meal plan generation...');
 
     try {
-      // Prepare profile data for the edge function
-      const profileData = {
-        age: profile.age,
-        weight: profile.weight,
-        height: profile.height,
-        goal: profile.goal,
-        activityLevel: profile.activity_level,
-        dietaryRestrictions: profile.dietary_restrictions || [],
-        allergies: profile.allergies,
-        budgetRange: profile.budget_range
-      };
-
-      console.log('Profile data being sent:', profileData);
-
-      // Validate profile has required data
-      if (!profileData.age || !profileData.weight || !profileData.height || !profileData.goal) {
-        toast({
-          title: "Incomplete Profile",
-          description: "Please complete your profile with age, weight, height, and goal before generating a meal plan.",
-          variant: "destructive",
-        });
-        navigate('/profile-setup');
-        return;
-      }
-
-      // Show progress toast
-      toast({
-        title: "Generating Meal Plan",
-        description: "This may take up to 2 minutes. Please wait...",
+      // Step 1: Generate meal plan via edge function
+      setProgress(20);
+      setCurrentStep('Generating personalized meals...');
+      
+      console.log('Calling meal plan generation function...');
+      const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
+        body: { profile, planDetails }
       });
-
-      // Call the Supabase edge function to generate meal plan with extended timeout
-      console.log('Calling generate-meal-plan edge function...');
-      const { data: result, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
-        body: {
-          profile: profileData,
-          planDetails: {
-            planName: formData.planName,
-            duration: parseInt(formData.duration),
-            targetCalories: formData.targetCalories ? parseInt(formData.targetCalories) : null,
-            additionalNotes: formData.additionalNotes
-          }
-        }
-      });
-
-      console.log('Edge function response:', { result, error: functionError });
 
       if (functionError) {
         console.error('Edge function error:', functionError);
-        throw new Error(`Edge function failed: ${functionError.message || 'Unknown error'}`);
+        throw new Error(functionError.message || 'Failed to generate meal plan');
       }
 
-      if (!result || !result.meals) {
-        console.error('Invalid result from edge function:', result);
-        throw new Error('Invalid response from meal plan generator');
+      if (!mealPlanData || !mealPlanData.meals) {
+        throw new Error('Invalid meal plan data received');
       }
 
-      console.log('Generated meal plan:', result);
+      const mealPlan: MealPlan = mealPlanData;
+      console.log('Received meal plan with', mealPlan.meals.length, 'meals');
 
-      // Save the meal plan to the database
-      console.log('Saving meal plan to database...');
-      const { data: mealPlan, error: mealPlanError } = await supabase
+      // Step 2: Create meal plan record
+      setProgress(40);
+      setCurrentStep('Saving meal plan...');
+
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(startDate.getDate() + planDetails.duration - 1);
+
+      const { data: savedMealPlan, error: mealPlanError } = await supabase
         .from('meal_plans')
         .insert({
-          user_id: user.id,
-          name: formData.planName,
-          description: `AI-generated meal plan for ${profile.goal}`,
-          start_date: new Date().toISOString().split('T')[0],
-          end_date: new Date(Date.now() + parseInt(formData.duration) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          is_active: true
+          user_id: userId,
+          name: `${planDetails.duration}-Day Meal Plan`,
+          description: `Generated meal plan for ${profile.goal} goal`,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          target_calories: planDetails.targetCalories || 2000,
         })
         .select()
         .single();
 
       if (mealPlanError) {
-        console.error('Meal plan save error:', mealPlanError);
-        throw new Error(`Failed to save meal plan: ${mealPlanError.message}`);
+        console.error('Error creating meal plan:', mealPlanError);
+        throw new Error('Failed to save meal plan');
       }
 
-      console.log('Saved meal plan:', mealPlan);
+      console.log('Created meal plan:', savedMealPlan.id);
 
-      // Create shopping list for the meal plan
-      console.log('Creating shopping list for meal plan...');
-      const { data: shoppingList, error: shoppingListError } = await supabase
-        .from('shopping_lists')
-        .insert({
-          user_id: user.id,
-          name: `${formData.planName} Shopping List`,
-          meal_plan_id: mealPlan.id,
-          status: 'active'
-        })
-        .select()
-        .single();
+      // Step 3: Save meals and ingredients
+      setProgress(60);
+      setCurrentStep('Saving meals and ingredients...');
 
-      if (shoppingListError) {
-        console.error('Shopping list creation error:', shoppingListError);
-        throw new Error(`Failed to create shopping list: ${shoppingListError.message}`);
-      }
-
-      console.log('Created shopping list:', shoppingList);
-
-      // Save individual meals and collect ingredients
-      console.log('Saving meals to database...');
-      const allIngredients: Array<{
-        ingredient_name: string;
-        quantity: number;
-        unit: string;
-        category: string;
-        estimated_cost: number;
-      }> = [];
-
-      for (const meal of result.meals) {
+      for (const meal of mealPlan.meals) {
         console.log('Saving meal:', meal.name);
+        
         const { data: savedMeal, error: mealError } = await supabase
           .from('meals')
           .insert({
-            meal_plan_id: mealPlan.id,
+            meal_plan_id: savedMealPlan.id,
             name: meal.name,
             meal_type: meal.type,
             day_of_week: meal.dayOfWeek,
-            recipe_instructions: meal.instructions,
+            instructions: meal.instructions,
             prep_time_minutes: meal.prepTime,
             cook_time_minutes: meal.cookTime,
             servings: meal.servings,
-            calories_per_serving: meal.calories
+            calories_per_serving: meal.calories,
           })
           .select()
           .single();
 
         if (mealError) {
-          console.error('Meal save error:', mealError);
-          throw new Error(`Failed to save meal ${meal.name}: ${mealError.message}`);
+          console.error('Error saving meal:', mealError);
+          throw new Error(`Failed to save meal: ${meal.name}`);
         }
 
-        // Save ingredients for each meal and collect for shopping list
+        // Save ingredients for this meal
         if (meal.ingredients && meal.ingredients.length > 0) {
-          console.log(`Saving ${meal.ingredients.length} ingredients for meal:`, meal.name);
-          for (const ingredient of meal.ingredients) {
-            const { error: ingredientError } = await supabase
-              .from('meal_ingredients')
-              .insert({
-                meal_id: savedMeal.id,
-                ingredient_name: ingredient.name,
-                quantity: ingredient.quantity,
-                unit: ingredient.unit,
-                category: ingredient.category,
-                estimated_cost: ingredient.estimatedCost
-              });
+          console.log('Saving', meal.ingredients.length, 'ingredients for meal:', meal.name);
+          
+          const ingredientsToSave = meal.ingredients.map(ingredient => ({
+            meal_id: savedMeal.id,
+            ingredient_name: ingredient.name,
+            quantity: ingredient.quantity,
+            unit: ingredient.unit,
+            category: ingredient.category,
+            estimated_cost: ingredient.estimatedCost,
+          }));
 
-            if (ingredientError) {
-              console.error('Ingredient save error:', ingredientError);
-            }
+          const { error: ingredientError } = await supabase
+            .from('meal_ingredients')
+            .insert(ingredientsToSave);
 
-            // Add to shopping list ingredients (combine duplicates)
-            const existingIngredient = allIngredients.find(
-              item => item.ingredient_name.toLowerCase() === ingredient.name.toLowerCase() && 
-                     item.unit === ingredient.unit
-            );
-
-            if (existingIngredient) {
-              existingIngredient.quantity += ingredient.quantity;
-            } else {
-              allIngredients.push({
-                ingredient_name: ingredient.name,
-                quantity: ingredient.quantity,
-                unit: ingredient.unit,
-                category: ingredient.category || 'Other',
-                estimated_cost: ingredient.estimatedCost
-              });
-            }
+          if (ingredientError) {
+            console.error('Error saving ingredients:', ingredientError);
+            throw new Error(`Failed to save ingredients for meal: ${meal.name}`);
           }
         }
       }
 
-      // Add all ingredients to the shopping list
-      if (allIngredients.length > 0) {
-        console.log(`Adding ${allIngredients.length} unique ingredients to shopping list...`);
-        const shoppingListItems = allIngredients.map(ingredient => ({
-          shopping_list_id: shoppingList.id,
-          ingredient_name: ingredient.ingredient_name,
-          quantity: ingredient.quantity,
-          unit: ingredient.unit,
-          category: ingredient.category || 'Other',
-          estimated_cost: ingredient.estimated_cost,
-          is_purchased: false
-        }));
+      // Step 4: Create shopping list if requested
+      if (planDetails.createShoppingList) {
+        setProgress(80);
+        setCurrentStep('Creating shopping list...');
 
-        const { error: itemsError } = await supabase
-          .from('shopping_list_items')
-          .insert(shoppingListItems);
-
-        if (itemsError) {
-          console.error('Shopping list items creation error:', itemsError);
-          // Don't throw here, the meal plan is already created
+        try {
+          const shoppingListId = await generateShoppingListFromMealPlan(
+            savedMealPlan.id,
+            userId,
+            `${savedMealPlan.name} - Shopping List`
+          );
+          console.log('Created shopping list:', shoppingListId);
+        } catch (shoppingListError) {
+          console.error('Error creating shopping list:', shoppingListError);
+          // Don't fail the entire process if shopping list creation fails
+          toast({
+            title: "Warning",
+            description: "Meal plan created successfully, but shopping list creation failed. You can create it manually later.",
+            variant: "destructive",
+          });
         }
       }
 
-      console.log('Meal plan generation completed successfully');
+      setProgress(100);
+      setCurrentStep('Meal plan generation completed successfully!');
+
       toast({
-        title: "Meal Plan Generated!",
-        description: "Your personalized meal plan and shopping list have been created successfully.",
+        title: "Success!",
+        description: `Your ${planDetails.duration}-day meal plan has been generated successfully!`,
       });
 
-      navigate('/dashboard');
+      return {
+        success: true,
+        mealPlanId: savedMealPlan.id,
+        message: 'Meal plan generated successfully!'
+      };
+
     } catch (error) {
-      console.error('Error generating meal plan:', error);
+      console.error('Meal plan generation error:', error);
+      
       toast({
-        title: "Generation Failed",
+        title: "Error",
         description: error instanceof Error ? error.message : "Failed to generate meal plan. Please try again.",
         variant: "destructive",
       });
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error occurred"
+      };
     } finally {
       setIsGenerating(false);
     }
   };
 
   return {
+    generateMealPlan,
     isGenerating,
-    generateMealPlan
+    progress,
+    currentStep,
   };
 };
