@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarDays, Utensils, Loader2 } from "lucide-react";
+import { CalendarDays, Utensils, Loader2, Clock } from "lucide-react";
 
 interface MealPlanFormData {
   planName: string;
@@ -95,6 +95,18 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
               onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
             />
           </div>
+
+          {isGenerating && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2 text-blue-700">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-medium">Generation in progress...</span>
+              </div>
+              <p className="text-sm text-blue-600 mt-1">
+                This may take up to 2 minutes. Please be patient while our AI creates your personalized meal plan.
+              </p>
+            </div>
+          )}
 
           <Button 
             type="submit" 

@@ -82,7 +82,13 @@ export const useMealPlanGeneration = (profile: Profile | null) => {
         return;
       }
 
-      // Call the Supabase edge function to generate meal plan
+      // Show progress toast
+      toast({
+        title: "Generating Meal Plan",
+        description: "This may take up to 2 minutes. Please wait...",
+      });
+
+      // Call the Supabase edge function to generate meal plan with extended timeout
       console.log('Calling generate-meal-plan edge function...');
       const { data: result, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
         body: {

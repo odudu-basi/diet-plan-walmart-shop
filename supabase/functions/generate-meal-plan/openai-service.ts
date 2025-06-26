@@ -22,11 +22,11 @@ export class OpenAIService {
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Create ${planDetails.duration} days of meals. Return ONLY JSON.` }
+          { role: 'user', content: `Generate exactly ${planDetails.duration} days of meals. Return ONLY valid JSON.` }
         ],
-        temperature: 0.1, // Lower for more consistent, faster responses
-        max_tokens: 4000, // Reduced from 8000 for faster generation
-        top_p: 0.9, // Add for more focused responses
+        temperature: 0.3,
+        max_tokens: 6000,
+        top_p: 0.9,
       }),
     });
 
@@ -50,39 +50,57 @@ export class OpenAIService {
     const restrictions = profile.dietaryRestrictions.length > 0 ? profile.dietaryRestrictions.join(', ') : 'None';
     const allergies = profile.allergies || 'None';
     
-    return `Create a ${planDetails.duration}-day meal plan. Each day needs breakfast, lunch, dinner, and 1 snack.
+    return `You are a professional nutritionist creating a ${planDetails.duration}-day meal plan.
 
-Profile: ${profile.age}y, ${profile.weight}lbs, ${profile.goal}, ${profile.activityLevel} activity, ${dailyCalories} daily calories
-Restrictions: ${restrictions}
-Allergies: ${allergies}
-Budget: ${profile.budgetRange}
+PROFILE:
+- Age: ${profile.age}, Weight: ${profile.weight}lbs, Goal: ${profile.goal}
+- Activity: ${profile.activityLevel}, Daily calories: ${dailyCalories}
+- Restrictions: ${restrictions}, Allergies: ${allergies}
+- Budget: ${profile.budgetRange}
 
-Return JSON only:
+REQUIREMENTS:
+- Create exactly ${planDetails.duration} days of meals
+- Each day needs: breakfast, lunch, dinner, snack (4 meals per day)
+- Keep meals simple and budget-friendly
+- Use common ingredients
+- Instructions should be brief (2-3 sentences max)
+
+RETURN FORMAT - ONLY JSON:
 {
   "meals": [
     {
-      "name": "Meal Name",
-      "type": "breakfast|lunch|dinner|snack",
-      "dayOfWeek": 0-${planDetails.duration - 1},
-      "instructions": "Brief cooking steps",
-      "prepTime": 15,
-      "cookTime": 20,
-      "servings": 2,
-      "calories": 400,
+      "name": "Scrambled Eggs with Toast",
+      "type": "breakfast",
+      "dayOfWeek": 0,
+      "instructions": "Scramble 2 eggs in butter. Serve with whole grain toast.",
+      "prepTime": 5,
+      "cookTime": 5,
+      "servings": 1,
+      "calories": 350,
       "ingredients": [
         {
-          "name": "Ingredient",
-          "quantity": 1,
-          "unit": "cup",
+          "name": "Eggs",
+          "quantity": 2,
+          "unit": "pieces",
           "category": "Protein",
-          "estimatedCost": 2.5
+          "estimatedCost": 1.5
+        },
+        {
+          "name": "Whole grain bread",
+          "quantity": 2,
+          "unit": "slices",
+          "category": "Grains",
+          "estimatedCost": 1.0
         }
       ]
     }
   ]
 }
 
-Make meals simple, affordable, and aligned with the goal. Keep instructions concise.`;
+Generate ${planDetails.duration * 4} total meals (${planDetails.duration} days × 4 meals per day).
+Day numbering: 0 to ${planDetails.duration - 1}.
+Meal types: breakfast, lunch, dinner, snack.
+Return ONLY the JSON object.`;
   }
 
   private parseResponse(generatedContent: string): MealPlan {
@@ -90,6 +108,13 @@ Make meals simple, affordable, and aligned with the goal. Keep instructions conc
 
     try {
       let jsonString = generatedContent.trim();
+      
+      // Remove any markdown formatting
+      if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
       
       // Extract JSON from response
       const startIndex = jsonString.indexOf('{');
@@ -99,14 +124,7 @@ Make meals simple, affordable, and aligned with the goal. Keep instructions conc
         jsonString = jsonString.substring(startIndex, lastIndex + 1);
       }
       
-      // Quick fix for common truncation issues
-      if (!jsonString.endsWith('}')) {
-        const lastCompleteObject = jsonString.lastIndexOf('    }');
-        if (lastCompleteObject !== -1) {
-          jsonString = jsonString.substring(0, lastCompleteObject + 5) + '\n  ]\n}';
-        }
-      }
-      
+      console.log('Attempting to parse JSON...');
       const mealPlan = JSON.parse(jsonString);
       
       // Validate structure
@@ -114,11 +132,25 @@ Make meals simple, affordable, and aligned with the goal. Keep instructions conc
         throw new Error('Invalid meal plan structure: missing meals array');
       }
       
+      // Validate each meal has required fields
+      for (const meal of mealPlan.meals) {
+        if (!meal.name || !meal.type || meal.dayOfWeek === undefined || !meal.ingredients) {
+          console.error('Invalid meal structure:', meal);
+          throw new Error('Invalid meal structure: missing required fields');
+        }
+        
+        // Ensure ingredients array is valid
+        if (!Array.isArray(meal.ingredients)) {
+          throw new Error('Invalid meal structure: ingredients must be an array');
+        }
+      }
+      
       console.log('Successfully parsed meal plan with', mealPlan.meals.length, 'meals');
       return mealPlan;
       
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError.message);
+      console.error('Raw response:', generatedContent);
       throw new Error(`Invalid response format from AI: ${parseError.message}`);
     }
   }

@@ -28,10 +28,10 @@ serve(async (req) => {
     // Initialize OpenAI service
     const openAIService = new OpenAIService(openAIApiKey!);
     
-    // Generate meal plan with timeout
-    console.log('Starting meal plan generation with 45s timeout...');
+    // Generate meal plan with extended timeout for longer generation
+    console.log('Starting meal plan generation with 2 minute timeout...');
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout after 45 seconds')), 45000)
+      setTimeout(() => reject(new Error('Request timeout after 2 minutes')), 120000)
     );
     
     const mealPlanPromise = openAIService.generateMealPlan(profile, planDetails, dailyCalories);
