@@ -11,7 +11,7 @@ export class OpenAIService {
   async generateMealPlan(profile: UserProfile, planDetails: PlanDetails, dailyCalories: number): Promise<MealPlan> {
     const systemPrompt = this.buildCompactSystemPrompt(profile, planDetails, dailyCalories);
 
-    console.log('Calling OpenAI API with compact settings...');
+    console.log('Calling OpenAI API with optimized settings...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -24,9 +24,9 @@ export class OpenAIService {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Generate exactly ${planDetails.duration} days of meals. Return ONLY valid JSON with no extra text.` }
         ],
-        temperature: 0.2, // Lower temperature for more consistent output
-        max_tokens: 4000, // Reduced token limit to prevent truncation
-        top_p: 0.8,
+        temperature: 0.1,
+        max_tokens: 3000,
+        top_p: 0.9,
       }),
     });
 
@@ -43,30 +43,23 @@ export class OpenAIService {
       throw new Error('Invalid response structure from OpenAI');
     }
 
-    return this.parseResponse(data.choices[0].message.content);
+    return this.parseResponse(data.choices[0].message.content, planDetails);
   }
 
   private buildCompactSystemPrompt(profile: UserProfile, planDetails: PlanDetails, dailyCalories: number): string {
     const restrictions = profile.dietaryRestrictions.length > 0 ? profile.dietaryRestrictions.join(', ') : 'None';
     const allergies = profile.allergies || 'None';
     
-    return `Create a ${planDetails.duration}-day meal plan for:
-- Goal: ${profile.goal}, Calories: ${dailyCalories}/day
-- Restrictions: ${restrictions}, Allergies: ${allergies}
-- Budget: ${profile.budgetRange}
+    return `Create a ${planDetails.duration}-day meal plan.
 
-Requirements:
-- ${planDetails.duration} days × 4 meals (breakfast, lunch, dinner, snack)
-- Simple recipes, brief instructions
-- Common ingredients only
-- Compact JSON format
+Profile: ${profile.goal}, ${dailyCalories} cal/day, Restrictions: ${restrictions}, Allergies: ${allergies}, Budget: ${profile.budgetRange}
 
-JSON format:
+Return ONLY this JSON structure with ${planDetails.duration * 4} meals:
 {
   "meals": [
     {
       "name": "Meal Name",
-      "type": "breakfast|lunch|dinner|snack",
+      "type": "breakfast",
       "dayOfWeek": 0,
       "instructions": "Brief steps",
       "prepTime": 5,
@@ -74,33 +67,38 @@ JSON format:
       "servings": 1,
       "calories": 300,
       "ingredients": [
-        {"name": "Ingredient", "quantity": 1, "unit": "cup", "category": "Protein", "estimatedCost": 2}
+        {"name": "Item", "quantity": 1, "unit": "cup", "category": "Protein", "estimatedCost": 2}
       ]
     }
   ]
 }
 
-Generate ${planDetails.duration * 4} meals total. Days 0-${planDetails.duration - 1}. Return ONLY JSON.`;
+Requirements:
+- ${planDetails.duration} days (0 to ${planDetails.duration - 1})
+- 4 meals per day: breakfast, lunch, dinner, snack
+- Simple ingredients only
+- Brief instructions
+- Valid JSON only`;
   }
 
-  private parseResponse(generatedContent: string): MealPlan {
+  private parseResponse(generatedContent: string, planDetails: PlanDetails): MealPlan {
     console.log('Parsing AI response...');
 
     try {
+      // Clean the response content
       let jsonString = generatedContent.trim();
       
-      // Remove markdown formatting
+      // Remove markdown code blocks
       if (jsonString.includes('```')) {
         const jsonMatch = jsonString.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
         if (jsonMatch) {
           jsonString = jsonMatch[1];
         } else {
-          // Fallback: remove all ```
           jsonString = jsonString.replace(/```[^`]*```/g, '').trim();
         }
       }
       
-      // Find JSON boundaries more carefully
+      // Find JSON boundaries
       const firstBrace = jsonString.indexOf('{');
       const lastBrace = jsonString.lastIndexOf('}');
       
@@ -110,10 +108,10 @@ Generate ${planDetails.duration * 4} meals total. Days 0-${planDetails.duration 
       
       jsonString = jsonString.substring(firstBrace, lastBrace + 1);
       
-      // Clean up common JSON issues
-      jsonString = this.cleanupJson(jsonString);
+      // Clean control characters and fix common JSON issues
+      jsonString = this.sanitizeJsonString(jsonString);
       
-      console.log('Attempting to parse cleaned JSON...');
+      console.log('Attempting to parse JSON...');
       const mealPlan = JSON.parse(jsonString);
       
       // Validate structure
@@ -121,95 +119,85 @@ Generate ${planDetails.duration * 4} meals total. Days 0-${planDetails.duration 
         throw new Error('Invalid meal plan structure: missing meals array');
       }
       
-      // Validate and fix each meal
-      mealPlan.meals = mealPlan.meals.map((meal: any, index: number) => {
-        if (!meal.name || !meal.type || meal.dayOfWeek === undefined) {
-          console.warn(`Fixing incomplete meal at index ${index}:`, meal);
-          return {
-            name: meal.name || `Meal ${index + 1}`,
-            type: meal.type || (index % 4 === 0 ? 'breakfast' : index % 4 === 1 ? 'lunch' : index % 4 === 2 ? 'dinner' : 'snack'),
-            dayOfWeek: meal.dayOfWeek !== undefined ? meal.dayOfWeek : Math.floor(index / 4),
-            instructions: meal.instructions || 'Simple preparation',
-            prepTime: meal.prepTime || 5,
-            cookTime: meal.cookTime || 10,
-            servings: meal.servings || 1,
-            calories: meal.calories || 300,
-            ingredients: Array.isArray(meal.ingredients) ? meal.ingredients : []
-          };
-        }
-        
-        // Ensure ingredients array is valid
-        if (!Array.isArray(meal.ingredients)) {
-          meal.ingredients = [];
-        }
-        
-        return meal;
-      });
+      // Validate meals
+      mealPlan.meals = this.validateAndFixMeals(mealPlan.meals, planDetails);
       
       console.log('Successfully parsed meal plan with', mealPlan.meals.length, 'meals');
       return mealPlan;
       
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError.message);
-      console.error('Raw response length:', generatedContent.length);
-      console.error('First 500 chars:', generatedContent.substring(0, 500));
-      console.error('Last 500 chars:', generatedContent.substring(Math.max(0, generatedContent.length - 500)));
+      console.error('Response preview:', generatedContent.substring(0, 200));
       
-      // Return a fallback meal plan
+      // Return fallback meal plan
       console.log('Generating fallback meal plan...');
-      return this.generateFallbackMealPlan(parseInt(planDetails.duration.toString()));
+      return this.generateFallbackMealPlan(planDetails.duration);
     }
   }
 
-  private cleanupJson(jsonString: string): string {
-    // Remove trailing commas before closing brackets/braces
+  private sanitizeJsonString(jsonString: string): string {
+    // Remove control characters that cause JSON parsing errors
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, '');
+    
+    // Fix trailing commas
     jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
     
-    // Fix incomplete strings (add closing quotes if missing)
+    // Fix incomplete strings
     jsonString = jsonString.replace(/("[^"]*$)/gm, '$1"');
     
-    // Remove any trailing incomplete elements
-    const lines = jsonString.split('\n');
-    const cleanLines = [];
-    let braceCount = 0;
-    let inString = false;
-    let escapeNext = false;
-    
-    for (const line of lines) {
-      let validLine = true;
-      
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        
-        if (escapeNext) {
-          escapeNext = false;
-          continue;
-        }
-        
-        if (char === '\\') {
-          escapeNext = true;
-          continue;
-        }
-        
-        if (char === '"' && !escapeNext) {
-          inString = !inString;
-        }
-        
-        if (!inString) {
-          if (char === '{' || char === '[') {
-            braceCount++;
-          } else if (char === '}' || char === ']') {
-            braceCount--;
-          }
-        }
-      }
-      
-      if (validLine) {
-        cleanLines.push(line);
-      }
+    // Remove any text after the last closing brace
+    const lastBrace = jsonString.lastIndexOf('}');
+    if (lastBrace !== -1) {
+      jsonString = jsonString.substring(0, lastBrace + 1);
     }
     
-    return cleanLines.join('\n');
+    return jsonString;
+  }
+
+  private validateAndFixMeals(meals: any[], planDetails: PlanDetails): any[] {
+    const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+    const expectedMealCount = planDetails.duration * 4;
+    
+    // Fix incomplete meals
+    const validMeals = meals.map((meal: any, index: number) => {
+      const dayOfWeek = Math.floor(index / 4);
+      const mealTypeIndex = index % 4;
+      
+      return {
+        name: meal.name || `Meal ${index + 1}`,
+        type: meal.type || mealTypes[mealTypeIndex],
+        dayOfWeek: meal.dayOfWeek !== undefined ? meal.dayOfWeek : dayOfWeek,
+        instructions: meal.instructions || 'Simple preparation',
+        prepTime: meal.prepTime || 5,
+        cookTime: meal.cookTime || 10,
+        servings: meal.servings || 1,
+        calories: meal.calories || 300,
+        ingredients: Array.isArray(meal.ingredients) ? meal.ingredients : []
+      };
+    });
+    
+    // Ensure we have the right number of meals
+    while (validMeals.length < expectedMealCount) {
+      const index = validMeals.length;
+      const dayOfWeek = Math.floor(index / 4);
+      const mealTypeIndex = index % 4;
+      
+      validMeals.push({
+        name: `Simple ${mealTypes[mealTypeIndex]}`,
+        type: mealTypes[mealTypeIndex],
+        dayOfWeek,
+        instructions: 'Quick and easy preparation',
+        prepTime: 5,
+        cookTime: 5,
+        servings: 1,
+        calories: 250,
+        ingredients: [
+          { name: 'Basic ingredient', quantity: 1, unit: 'serving', category: 'Other', estimatedCost: 2 }
+        ]
+      });
+    }
+    
+    return validMeals.slice(0, expectedMealCount);
   }
 
   private generateFallbackMealPlan(duration: number): MealPlan {

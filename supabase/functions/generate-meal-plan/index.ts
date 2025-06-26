@@ -19,16 +19,34 @@ serve(async (req) => {
   }
 
   try {
-    const { profile, planDetails }: { profile: UserProfile; planDetails: PlanDetails } = await req.json();
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    const requestBody = await req.json();
+    const { profile, planDetails }: { profile: UserProfile; planDetails: PlanDetails } = requestBody;
+
+    console.log('Processing meal plan request for duration:', planDetails.duration);
+
+    // Validate required data
+    if (!profile || !planDetails) {
+      throw new Error('Missing profile or plan details');
+    }
+
+    if (!profile.age || !profile.weight || !profile.height || !profile.goal) {
+      throw new Error('Incomplete profile data - missing age, weight, height, or goal');
+    }
 
     // Calculate BMR and daily calorie needs
     const bmr = calculateBMR(profile.age, profile.weight, profile.height, 'male');
     const dailyCalories = planDetails.targetCalories || calculateDailyCalories(bmr, profile.activityLevel, profile.goal);
 
+    console.log('Calculated daily calories:', dailyCalories);
+
     // Initialize OpenAI service
-    const openAIService = new OpenAIService(openAIApiKey!);
+    const openAIService = new OpenAIService(openAIApiKey);
     
-    // Generate meal plan with no timeout - let it run as long as needed
+    // Generate meal plan
     console.log('Starting meal plan generation...');
     const mealPlan = await openAIService.generateMealPlan(profile, planDetails, dailyCalories);
 
@@ -39,16 +57,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in generate-meal-plan function:', error);
     
-    // More detailed error logging
-    if (error instanceof SyntaxError) {
-      console.error('JSON Parse Error Details:', {
-        message: error.message,
-        stack: error.stack
-      });
-    }
-    
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error.message || 'Failed to generate meal plan',
       type: error.constructor.name 
     }), {
       status: 500,
