@@ -126,7 +126,6 @@ export const useMealPlanGeneration = (profile: any) => {
           description: `Generated meal plan for ${profile.goal} goal`,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
-          target_calories: planDetails.targetCalories || 2000,
         })
         .select()
         .single();
