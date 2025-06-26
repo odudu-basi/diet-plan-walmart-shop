@@ -3,10 +3,16 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 
 const AuthenticatedApp = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSetupProfile = () => {
+    navigate('/profile-setup');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
@@ -42,7 +48,10 @@ const AuthenticatedApp = () => {
             <p className="text-gray-600 mb-4">
               Ready to start your personalized diet journey?
             </p>
-            <Button className="w-full bg-green-600 hover:bg-green-700">
+            <Button 
+              onClick={handleSetupProfile}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
               Set Up Profile
             </Button>
           </CardContent>
