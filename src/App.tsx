@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import ProfileSetup from "./pages/ProfileSetup";
 import Dashboard from "./pages/Dashboard";
 import MealPlanGenerator from "./pages/MealPlanGenerator";
+import AllMealPlans from "./pages/AllMealPlans";
 import WeeklyMealPlan from "./pages/WeeklyMealPlan";
 import ShoppingList from "./pages/ShoppingList";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/meal-plan-generator" element={<MealPlanGenerator />} />
+            <Route path="/all-meal-plans" element={<AllMealPlans />} />
             <Route path="/meal-plan/:mealPlanId" element={<WeeklyMealPlan />} />
             <Route path="/shopping-list" element={<ShoppingList />} />
             <Route path="*" element={<NotFound />} />

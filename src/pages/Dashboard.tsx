@@ -180,7 +180,7 @@ const Dashboard = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate('/meal-plan-generator')}
+              onClick={() => navigate('/all-meal-plans')}
               className="text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50"
             >
               View All
