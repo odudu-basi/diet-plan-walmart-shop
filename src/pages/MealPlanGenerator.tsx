@@ -58,13 +58,11 @@ const MealPlanGenerator = () => {
     setIsGenerating(true);
 
     try {
-      // Call the OpenAI edge function to generate meal plan
-      const response = await fetch('/api/generate-meal-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      console.log('Starting meal plan generation...');
+      
+      // Call the Supabase edge function to generate meal plan
+      const { data: result, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
+        body: {
           profile: {
             age: profile.age,
             weight: profile.weight,
@@ -76,19 +74,24 @@ const MealPlanGenerator = () => {
             budgetRange: profile.budget_range
           },
           planDetails: {
-            name: formData.planName,
+            planName: formData.planName,
             duration: parseInt(formData.duration),
             targetCalories: formData.targetCalories ? parseInt(formData.targetCalories) : null,
             additionalNotes: formData.additionalNotes
           }
-        }),
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate meal plan');
+      if (functionError) {
+        console.error('Edge function error:', functionError);
+        throw functionError;
       }
 
-      const result = await response.json();
+      if (!result || !result.meals) {
+        throw new Error('Invalid response from meal plan generator');
+      }
+
+      console.log('Generated meal plan:', result);
 
       // Save the meal plan to the database
       const { data: mealPlan, error: mealPlanError } = await supabase
@@ -104,7 +107,12 @@ const MealPlanGenerator = () => {
         .select()
         .single();
 
-      if (mealPlanError) throw mealPlanError;
+      if (mealPlanError) {
+        console.error('Meal plan save error:', mealPlanError);
+        throw mealPlanError;
+      }
+
+      console.log('Saved meal plan:', mealPlan);
 
       // Save individual meals
       for (const meal of result.meals) {
@@ -124,11 +132,14 @@ const MealPlanGenerator = () => {
           .select()
           .single();
 
-        if (mealError) throw mealError;
+        if (mealError) {
+          console.error('Meal save error:', mealError);
+          throw mealError;
+        }
 
         // Save ingredients for each meal
         for (const ingredient of meal.ingredients) {
-          await supabase
+          const { error: ingredientError } = await supabase
             .from('meal_ingredients')
             .insert({
               meal_id: savedMeal.id,
@@ -138,6 +149,11 @@ const MealPlanGenerator = () => {
               category: ingredient.category,
               estimated_cost: ingredient.estimatedCost
             });
+
+          if (ingredientError) {
+            console.error('Ingredient save error:', ingredientError);
+            // Don't throw here, just log the error
+          }
         }
       }
 
