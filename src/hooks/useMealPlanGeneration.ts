@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { generateShoppingListFromMealPlan } from '@/utils/shoppingListGenerator';
+import { useNavigate } from 'react-router-dom';
 
 export interface UserProfile {
   age: number;
@@ -55,6 +55,7 @@ export const useMealPlanGeneration = (profile: any) => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const generateMealPlan = async (formData: MealPlanFormData) => {
     if (!profile) {
@@ -272,6 +273,9 @@ export const useMealPlanGeneration = (profile: any) => {
         title: "Success!",
         description: `Your personalized ${planDetails.duration}-day meal plan with ${uniqueMeals.size} unique meals has been generated!`,
       });
+
+      // Navigate to the meal plan page immediately
+      navigate(`/meal-plan/${savedMealPlan.id}`);
 
       return {
         success: true,
