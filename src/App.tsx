@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import ProfileSetup from "./pages/ProfileSetup";
 import Dashboard from "./pages/Dashboard";
+import MealPlanGenerator from "./pages/MealPlanGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
