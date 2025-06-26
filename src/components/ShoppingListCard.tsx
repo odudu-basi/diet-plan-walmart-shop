@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, DollarSign, Package } from "lucide-react";
+import { Calendar, DollarSign, Package, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ShoppingListCardProps {
@@ -17,6 +18,7 @@ interface ShoppingListCardProps {
 const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => {
   const { toast } = useToast();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleItemToggle = async (itemId: string, currentStatus: boolean) => {
     setUpdatingItems(prev => new Set(prev).add(itemId));
@@ -58,95 +60,106 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
   const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2">
-            <Package className="h-5 w-5 text-green-600" />
-            <span>{shoppingList.name}</span>
-          </CardTitle>
-          <Badge variant={shoppingList.status === 'completed' ? 'default' : 'secondary'}>
-            {shoppingList.status}
-          </Badge>
-        </div>
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <div className="flex items-center space-x-1">
-            <Calendar className="h-4 w-4" />
-            <span>{new Date(shoppingList.created_at).toLocaleDateString()}</span>
-          </div>
-          {shoppingList.total_estimated_cost && (
-            <div className="flex items-center space-x-1">
-              <DollarSign className="h-4 w-4" />
-              <span>${shoppingList.total_estimated_cost.toFixed(2)}</span>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="shadow-lg">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Package className="h-5 w-5 text-green-600" />
+                <span>{shoppingList.name}</span>
+                {isOpen ? (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-gray-500" />
+                )}
+              </CardTitle>
+              <Badge variant={shoppingList.status === 'completed' ? 'default' : 'secondary'}>
+                {shoppingList.status}
+              </Badge>
             </div>
-          )}
-          <div className="flex items-center space-x-1">
-            <span>{completedItems}/{totalItems} items</span>
-          </div>
-        </div>
-        {/* Progress bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-green-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-4">
-          {Object.entries(groupedItems).map(([category, items]: [string, any]) => (
-            <div key={category}>
-              <h4 className="font-medium text-gray-700 mb-2 border-b pb-1">{category}</h4>
-              <div className="space-y-2">
-                {items.map((item: any) => (
-                  <div 
-                    key={item.id} 
-                    className={cn(
-                      "flex items-center space-x-3 p-2 rounded-lg transition-all duration-300",
-                      item.is_purchased ? "bg-green-50 opacity-75" : "bg-gray-50"
-                    )}
-                  >
-                    <Checkbox
-                      checked={item.is_purchased}
-                      onCheckedChange={() => handleItemToggle(item.id, item.is_purchased)}
-                      disabled={updatingItems.has(item.id)}
-                      className={cn(
-                        "transition-colors",
-                        item.is_purchased && "data-[state=checked]:bg-green-600"
-                      )}
-                    />
-                    <div className="flex-1">
-                      <div className={cn(
-                        "font-medium transition-all duration-300",
-                        item.is_purchased && "line-through text-green-700"
-                      )}>
-                        {item.ingredient_name}
-                      </div>
-                      <div className={cn(
-                        "text-sm text-gray-600 transition-all duration-300",
-                        item.is_purchased && "text-green-600"
-                      )}>
-                        {item.quantity} {item.unit}
-                        {item.estimated_cost && ` • $${item.estimated_cost.toFixed(2)}`}
-                      </div>
-                      {item.notes && (
-                        <div className={cn(
-                          "text-xs text-gray-500 mt-1 transition-all duration-300",
-                          item.is_purchased && "text-green-500"
-                        )}>
-                          {item.notes}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-1">
+                <Calendar className="h-4 w-4" />
+                <span>{new Date(shoppingList.created_at).toLocaleDateString()}</span>
+              </div>
+              {shoppingList.total_estimated_cost && (
+                <div className="flex items-center space-x-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span>${shoppingList.total_estimated_cost.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex items-center space-x-1">
+                <span>{completedItems}/{totalItems} items</span>
               </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            {/* Progress bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(groupedItems).map(([category, items]: [string, any]) => (
+                <div key={category}>
+                  <h4 className="font-medium text-gray-700 mb-2 border-b pb-1">{category}</h4>
+                  <div className="space-y-2">
+                    {items.map((item: any) => (
+                      <div 
+                        key={item.id} 
+                        className={cn(
+                          "flex items-center space-x-3 p-2 rounded-lg transition-all duration-300",
+                          item.is_purchased ? "bg-green-50 opacity-75" : "bg-gray-50"
+                        )}
+                      >
+                        <Checkbox
+                          checked={item.is_purchased}
+                          onCheckedChange={() => handleItemToggle(item.id, item.is_purchased)}
+                          disabled={updatingItems.has(item.id)}
+                          className={cn(
+                            "transition-colors",
+                            item.is_purchased && "data-[state=checked]:bg-green-600"
+                          )}
+                        />
+                        <div className="flex-1">
+                          <div className={cn(
+                            "font-medium transition-all duration-300",
+                            item.is_purchased && "line-through text-green-700"
+                          )}>
+                            {item.ingredient_name}
+                          </div>
+                          <div className={cn(
+                            "text-sm text-gray-600 transition-all duration-300",
+                            item.is_purchased && "text-green-600"
+                          )}>
+                            {item.quantity} {item.unit}
+                            {item.estimated_cost && ` • $${item.estimated_cost.toFixed(2)}`}
+                          </div>
+                          {item.notes && (
+                            <div className={cn(
+                              "text-xs text-gray-500 mt-1 transition-all duration-300",
+                              item.is_purchased && "text-green-500"
+                            )}>
+                              {item.notes}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
 
