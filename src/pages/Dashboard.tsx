@@ -13,6 +13,26 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
 
+  // Fetch user's profile data
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!user
+  });
+
   // Fetch user's meal plans
   const { data: mealPlans, isLoading: mealPlansLoading } = useQuery({
     queryKey: ['meal-plans', user?.id],
@@ -83,6 +103,9 @@ const Dashboard = () => {
     );
   }
 
+  // Get display name - prefer first name from profile, fallback to email prefix
+  const displayName = profile?.first_name || user.email?.split('@')[0] || 'there';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
       {/* Modern Header with Logo */}
@@ -101,7 +124,7 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
                 FreshCart
               </h1>
-              <p className="text-xs text-gray-500">Welcome back, {user.email?.split('@')[0]}</p>
+              <p className="text-xs text-gray-500">Welcome back, {displayName}</p>
             </div>
           </div>
           <Button 
