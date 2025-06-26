@@ -57,7 +57,7 @@ Focus on:
 - Providing variety and balanced nutrition
 - Realistic prep times for busy lifestyles
 
-Return the response as a JSON object with this exact structure:
+IMPORTANT: You must respond with ONLY a valid JSON object and nothing else. Do not include any explanatory text, markdown formatting, or additional content. Return the response as a JSON object with this exact structure:
 {
   "meals": [
     {
@@ -82,6 +82,7 @@ Return the response as a JSON object with this exact structure:
   ]
 }`;
 
+    console.log('Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -92,23 +93,57 @@ Return the response as a JSON object with this exact structure:
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a ${planDetails.duration}-day meal plan for "${planDetails.planName}".` }
+          { role: 'user', content: `Generate a ${planDetails.duration}-day meal plan for "${planDetails.planName}". Remember to respond with ONLY valid JSON and no additional text.` }
         ],
-        temperature: 0.7,
+        temperature: 0.3,
         max_tokens: 4000,
       }),
     });
 
-    const data = await response.json();
-    const generatedContent = data.choices[0].message.content;
+    if (!response.ok) {
+      console.error('OpenAI API error:', response.status, response.statusText);
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
 
-    // Parse JSON response
+    const data = await response.json();
+    console.log('OpenAI API response received');
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid OpenAI response structure:', data);
+      throw new Error('Invalid response structure from OpenAI');
+    }
+
+    const generatedContent = data.choices[0].message.content;
+    console.log('Raw AI response:', generatedContent);
+
+    // Parse JSON response with better error handling
     let mealPlan;
     try {
-      mealPlan = JSON.parse(generatedContent);
+      // Try to extract JSON from the response if it contains additional text
+      let jsonString = generatedContent.trim();
+      
+      // Look for JSON object starting with { and ending with }
+      const startIndex = jsonString.indexOf('{');
+      const lastIndex = jsonString.lastIndexOf('}');
+      
+      if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
+        jsonString = jsonString.substring(startIndex, lastIndex + 1);
+      }
+      
+      console.log('Attempting to parse JSON:', jsonString.substring(0, 200) + '...');
+      mealPlan = JSON.parse(jsonString);
+      
+      // Validate the structure
+      if (!mealPlan.meals || !Array.isArray(mealPlan.meals)) {
+        throw new Error('Invalid meal plan structure: missing meals array');
+      }
+      
+      console.log('Successfully parsed meal plan with', mealPlan.meals.length, 'meals');
+      
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      throw new Error('Invalid response format from AI');
+      console.error('Raw response content:', generatedContent);
+      throw new Error(`Invalid response format from AI: ${parseError.message}`);
     }
 
     return new Response(JSON.stringify(mealPlan), {
