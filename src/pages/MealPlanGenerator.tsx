@@ -30,13 +30,18 @@ const MealPlanGenerator = () => {
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user) return null;
+      console.log('Fetching profile for user:', user.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
+      console.log('Profile data:', data);
       return data;
     },
     enabled: !!user
@@ -44,8 +49,10 @@ const MealPlanGenerator = () => {
 
   const handleGenerateMealPlan = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
     
     if (!user || !profile) {
+      console.log('Missing user or profile:', { user: !!user, profile: !!profile });
       toast({
         title: "Error",
         description: "Please complete your profile setup first.",
@@ -55,24 +62,50 @@ const MealPlanGenerator = () => {
       return;
     }
 
+    // Validate required fields
+    if (!formData.planName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a meal plan name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
+    console.log('Starting meal plan generation...');
 
     try {
-      console.log('Starting meal plan generation...');
-      
+      // Prepare profile data for the edge function
+      const profileData = {
+        age: profile.age,
+        weight: profile.weight,
+        height: profile.height,
+        goal: profile.goal,
+        activityLevel: profile.activity_level,
+        dietaryRestrictions: profile.dietary_restrictions || [],
+        allergies: profile.allergies,
+        budgetRange: profile.budget_range
+      };
+
+      console.log('Profile data being sent:', profileData);
+
+      // Validate profile has required data
+      if (!profileData.age || !profileData.weight || !profileData.height || !profileData.goal) {
+        toast({
+          title: "Incomplete Profile",
+          description: "Please complete your profile with age, weight, height, and goal before generating a meal plan.",
+          variant: "destructive",
+        });
+        navigate('/profile-setup');
+        return;
+      }
+
       // Call the Supabase edge function to generate meal plan
+      console.log('Calling generate-meal-plan edge function...');
       const { data: result, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
         body: {
-          profile: {
-            age: profile.age,
-            weight: profile.weight,
-            height: profile.height,
-            goal: profile.goal,
-            activityLevel: profile.activity_level,
-            dietaryRestrictions: profile.dietary_restrictions || [],
-            allergies: profile.allergies,
-            budgetRange: profile.budget_range
-          },
+          profile: profileData,
           planDetails: {
             planName: formData.planName,
             duration: parseInt(formData.duration),
@@ -82,18 +115,22 @@ const MealPlanGenerator = () => {
         }
       });
 
+      console.log('Edge function response:', { result, error: functionError });
+
       if (functionError) {
         console.error('Edge function error:', functionError);
-        throw functionError;
+        throw new Error(`Edge function failed: ${functionError.message || 'Unknown error'}`);
       }
 
       if (!result || !result.meals) {
+        console.error('Invalid result from edge function:', result);
         throw new Error('Invalid response from meal plan generator');
       }
 
       console.log('Generated meal plan:', result);
 
       // Save the meal plan to the database
+      console.log('Saving meal plan to database...');
       const { data: mealPlan, error: mealPlanError } = await supabase
         .from('meal_plans')
         .insert({
@@ -109,13 +146,15 @@ const MealPlanGenerator = () => {
 
       if (mealPlanError) {
         console.error('Meal plan save error:', mealPlanError);
-        throw mealPlanError;
+        throw new Error(`Failed to save meal plan: ${mealPlanError.message}`);
       }
 
       console.log('Saved meal plan:', mealPlan);
 
       // Save individual meals
+      console.log('Saving meals to database...');
       for (const meal of result.meals) {
+        console.log('Saving meal:', meal.name);
         const { data: savedMeal, error: mealError } = await supabase
           .from('meals')
           .insert({
@@ -134,29 +173,33 @@ const MealPlanGenerator = () => {
 
         if (mealError) {
           console.error('Meal save error:', mealError);
-          throw mealError;
+          throw new Error(`Failed to save meal ${meal.name}: ${mealError.message}`);
         }
 
         // Save ingredients for each meal
-        for (const ingredient of meal.ingredients) {
-          const { error: ingredientError } = await supabase
-            .from('meal_ingredients')
-            .insert({
-              meal_id: savedMeal.id,
-              ingredient_name: ingredient.name,
-              quantity: ingredient.quantity,
-              unit: ingredient.unit,
-              category: ingredient.category,
-              estimated_cost: ingredient.estimatedCost
-            });
+        if (meal.ingredients && meal.ingredients.length > 0) {
+          console.log(`Saving ${meal.ingredients.length} ingredients for meal:`, meal.name);
+          for (const ingredient of meal.ingredients) {
+            const { error: ingredientError } = await supabase
+              .from('meal_ingredients')
+              .insert({
+                meal_id: savedMeal.id,
+                ingredient_name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                category: ingredient.category,
+                estimated_cost: ingredient.estimatedCost
+              });
 
-          if (ingredientError) {
-            console.error('Ingredient save error:', ingredientError);
-            // Don't throw here, just log the error
+            if (ingredientError) {
+              console.error('Ingredient save error:', ingredientError);
+              // Don't throw here, just log the error
+            }
           }
         }
       }
 
+      console.log('Meal plan generation completed successfully');
       toast({
         title: "Meal Plan Generated!",
         description: "Your personalized meal plan has been created successfully.",
@@ -167,7 +210,7 @@ const MealPlanGenerator = () => {
       console.error('Error generating meal plan:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate meal plan. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate meal plan. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -242,22 +285,22 @@ const MealPlanGenerator = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="font-medium text-gray-600">Goal</p>
-                <p className="capitalize">{profile.goal?.replace('-', ' ')}</p>
+                <p className="capitalize">{profile?.goal?.replace('-', ' ') || 'Not set'}</p>
               </div>
               <div>
                 <p className="font-medium text-gray-600">Activity Level</p>
-                <p className="capitalize">{profile.activity_level}</p>
+                <p className="capitalize">{profile?.activity_level || 'Not set'}</p>
               </div>
               <div>
                 <p className="font-medium text-gray-600">Age</p>
-                <p>{profile.age} years</p>
+                <p>{profile?.age ? `${profile.age} years` : 'Not set'}</p>
               </div>
               <div>
                 <p className="font-medium text-gray-600">Weight</p>
-                <p>{profile.weight} lbs</p>
+                <p>{profile?.weight ? `${profile.weight} lbs` : 'Not set'}</p>
               </div>
             </div>
-            {profile.dietary_restrictions && profile.dietary_restrictions.length > 0 && (
+            {profile?.dietary_restrictions && profile.dietary_restrictions.length > 0 && (
               <div className="mt-4">
                 <p className="font-medium text-gray-600 mb-2">Dietary Preferences</p>
                 <div className="flex flex-wrap gap-2">
@@ -287,7 +330,7 @@ const MealPlanGenerator = () => {
           <CardContent>
             <form onSubmit={handleGenerateMealPlan} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="planName">Meal Plan Name</Label>
+                <Label htmlFor="planName">Meal Plan Name *</Label>
                 <Input
                   id="planName"
                   placeholder="e.g., My Weight Loss Plan, Muscle Building Week"
