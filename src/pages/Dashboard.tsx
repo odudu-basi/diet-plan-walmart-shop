@@ -242,7 +242,7 @@ const Dashboard = () => {
         {/* Recent Shopping Lists */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-emerald-800 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-teal-800 flex items-center gap-2">
               <ShoppingCart className="h-5 w-5 text-teal-600" />
               Shopping Lists
             </h2>
@@ -267,13 +267,13 @@ const Dashboard = () => {
               {shoppingLists.map((list) => (
                 <Card 
                   key={list.id} 
-                  className="shadow-md border-0 glass-card border-l-4 border-l-teal-500 cursor-pointer hover:shadow-lg hover:bg-teal-50/90 transition-all duration-200 rounded-xl produce-shadow"
+                  className="shadow-md border-0 bg-teal-50/80 backdrop-blur-sm border border-teal-100/30 border-l-4 border-l-teal-500 cursor-pointer hover:shadow-lg hover:bg-teal-50/90 transition-all duration-200 rounded-xl produce-shadow"
                   onClick={() => navigate('/shopping-list')}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-emerald-900 truncate">{list.name}</h3>
+                        <h3 className="font-semibold text-teal-900 truncate">{list.name}</h3>
                         <p className="text-sm text-teal-600 flex items-center mt-1">
                           <List className="h-4 w-4 mr-1" />
                           {list.shopping_list_items?.length || 0} items
@@ -288,13 +288,13 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <Card className="border-dashed border-2 border-teal-200 glass-card rounded-xl">
+            <Card className="border-dashed border-2 border-teal-200 bg-teal-50/80 backdrop-blur-sm border border-teal-100/30 rounded-xl">
               <CardContent className="p-6 text-center">
                 <div className="bg-teal-100 p-3 rounded-full w-fit mx-auto mb-3">
                   <ShoppingCart className="h-8 w-8 text-teal-500" />
                 </div>
-                <h3 className="text-sm font-semibold text-emerald-800 mb-2">No shopping lists yet</h3>
-                <p className="text-xs text-emerald-600 mb-4">Create your first shopping list with FreshCart</p>
+                <h3 className="text-sm font-semibold text-teal-800 mb-2">No shopping lists yet</h3>
+                <p className="text-xs text-teal-600 mb-4">Create your first shopping list with FreshCart</p>
                 <Button 
                   onClick={() => navigate('/shopping-list')}
                   size="sm"
