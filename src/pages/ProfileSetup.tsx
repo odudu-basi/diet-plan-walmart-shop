@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { User, Target, Heart, Scale, Apple } from "lucide-react";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -38,6 +42,45 @@ const ProfileSetup = () => {
     'Mediterranean'
   ];
 
+  // Load existing profile data if available
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+          return;
+        }
+
+        if (data) {
+          setFormData({
+            firstName: data.first_name || '',
+            lastName: data.last_name || '',
+            age: data.age?.toString() || '',
+            weight: data.weight?.toString() || '',
+            height: data.height?.toString() || '',
+            goal: data.goal || '',
+            activityLevel: data.activity_level || '',
+            dietaryRestrictions: data.dietary_restrictions || [],
+            allergies: data.allergies || '',
+            budgetRange: data.budget_range || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
   const handleCheckboxChange = (restriction: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -47,20 +90,73 @@ const ProfileSetup = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Save profile data (in real app, this would go to Supabase)
-    localStorage.setItem('user_profile', JSON.stringify(formData));
-    
-    toast({
-      title: "Profile Created!",
-      description: "Your profile has been set up successfully.",
-    });
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Navigate to the main app
-    navigate('/dashboard');
+    setIsLoading(true);
+
+    try {
+      const profileData = {
+        id: user.id,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        age: formData.age ? parseInt(formData.age) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        height: formData.height ? parseFloat(formData.height) : null,
+        goal: formData.goal,
+        activity_level: formData.activityLevel,
+        dietary_restrictions: formData.dietaryRestrictions,
+        allergies: formData.allergies,
+        budget_range: formData.budgetRange,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(profileData);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Saved!",
+        description: "Your profile has been updated successfully.",
+      });
+
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save your profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Please log in</h2>
+          <p className="text-gray-600">You need to be logged in to set up your profile.</p>
+          <Button onClick={() => navigate('/')} className="mt-4">
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
@@ -147,7 +243,7 @@ const ProfileSetup = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Health Goal</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({ ...prev, goal: value }))}>
+                  <Select value={formData.goal} onValueChange={(value) => setFormData(prev => ({ ...prev, goal: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your goal" />
                     </SelectTrigger>
@@ -162,7 +258,7 @@ const ProfileSetup = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Activity Level</Label>
-                  <Select onValueChange={(value) => setFormData(prev => ({ ...prev, activityLevel: value }))}>
+                  <Select value={formData.activityLevel} onValueChange={(value) => setFormData(prev => ({ ...prev, activityLevel: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select activity level" />
                     </SelectTrigger>
@@ -213,7 +309,7 @@ const ProfileSetup = () => {
               {/* Budget */}
               <div className="space-y-2">
                 <Label>Weekly Grocery Budget</Label>
-                <Select onValueChange={(value) => setFormData(prev => ({ ...prev, budgetRange: value }))}>
+                <Select value={formData.budgetRange} onValueChange={(value) => setFormData(prev => ({ ...prev, budgetRange: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select budget range" />
                   </SelectTrigger>
@@ -227,9 +323,13 @@ const ProfileSetup = () => {
                 </Select>
               </div>
 
-              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+              <Button 
+                type="submit" 
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
+              >
                 <Heart className="h-4 w-4 mr-2" />
-                Create My Profile
+                {isLoading ? 'Saving...' : 'Save My Profile'}
               </Button>
             </form>
           </CardContent>

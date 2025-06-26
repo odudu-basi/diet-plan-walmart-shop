@@ -1,15 +1,63 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { LogOut, User, ShoppingCart, Calendar, Target, TrendingUp } from "lucide-react";
+
+interface UserProfile {
+  first_name?: string;
+  last_name?: string;
+  goal?: string;
+  activity_level?: string;
+  budget_range?: string;
+}
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
-  
-  // Get user profile from localStorage (in real app, this would come from Supabase)
-  const userProfile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+  const [userProfile, setUserProfile] = useState<UserProfile>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+          return;
+        }
+
+        if (data) {
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Please log in</h2>
+          <p className="text-gray-600">You need to be logged in to access the dashboard.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -23,7 +71,9 @@ const Dashboard = () => {
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Diet Shopping</h1>
-                <p className="text-sm text-gray-500">Welcome back, {userProfile.firstName || user?.email}</p>
+                <p className="text-sm text-gray-500">
+                  Welcome back, {userProfile.first_name || user.email}
+                </p>
               </div>
             </div>
             <Button 
@@ -74,7 +124,7 @@ const Dashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Activity</p>
                   <p className="text-lg font-semibold">
-                    {userProfile.activityLevel?.replace('-', ' ') || 'Not set'}
+                    {userProfile.activity_level?.replace('-', ' ') || 'Not set'}
                   </p>
                 </div>
               </div>
@@ -88,7 +138,7 @@ const Dashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Budget</p>
                   <p className="text-lg font-semibold">
-                    {userProfile.budgetRange?.replace('-', ' - $') || 'Not set'}
+                    {userProfile.budget_range ? `$${userProfile.budget_range.replace('-', ' - $')}` : 'Not set'}
                   </p>
                 </div>
               </div>
@@ -155,7 +205,11 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => window.location.href = '/profile-setup'}
+              >
                 Edit Profile
               </Button>
             </CardContent>
