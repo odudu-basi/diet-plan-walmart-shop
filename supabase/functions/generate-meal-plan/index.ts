@@ -22,14 +22,21 @@ serve(async (req) => {
     const { profile, planDetails }: { profile: UserProfile; planDetails: PlanDetails } = await req.json();
 
     // Calculate BMR and daily calorie needs
-    const bmr = calculateBMR(profile.age, profile.weight, profile.height, 'male'); // Simplified - could be improved
+    const bmr = calculateBMR(profile.age, profile.weight, profile.height, 'male');
     const dailyCalories = planDetails.targetCalories || calculateDailyCalories(bmr, profile.activityLevel, profile.goal);
 
     // Initialize OpenAI service
     const openAIService = new OpenAIService(openAIApiKey!);
     
-    // Generate meal plan
-    const mealPlan = await openAIService.generateMealPlan(profile, planDetails, dailyCalories);
+    // Generate meal plan with timeout
+    console.log('Starting meal plan generation with 45s timeout...');
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout after 45 seconds')), 45000)
+    );
+    
+    const mealPlanPromise = openAIService.generateMealPlan(profile, planDetails, dailyCalories);
+    
+    const mealPlan = await Promise.race([mealPlanPromise, timeoutPromise]);
 
     return new Response(JSON.stringify(mealPlan), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
