@@ -12,6 +12,7 @@ interface ShoppingListHeaderProps {
   progressPercentage: number;
   createdAt: string;
   isOpen: boolean;
+  onToggle: () => void;
   onDelete: () => void;
 }
 
@@ -22,10 +23,14 @@ const ShoppingListHeader = ({
   progressPercentage, 
   createdAt, 
   isOpen, 
+  onToggle,
   onDelete 
 }: ShoppingListHeaderProps) => {
   return (
-    <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors pb-4">
+    <CardHeader 
+      className="cursor-pointer hover:bg-gray-50 transition-colors pb-4"
+      onClick={onToggle}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
@@ -50,7 +55,7 @@ const ShoppingListHeader = ({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-          <div className="p-2">
+          <div className="p-2 pointer-events-none">
             {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </div>
         </div>

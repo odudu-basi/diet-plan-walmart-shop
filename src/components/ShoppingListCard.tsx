@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ShoppingListHeader from './ShoppingListHeader';
 import ShoppingListContent from './ShoppingListContent';
 
@@ -84,30 +83,31 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
     }
   };
 
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <ShoppingListHeader
-            name={shoppingList.name}
-            totalItems={totalItems}
-            purchasedItems={purchasedItems}
-            progressPercentage={progressPercentage}
-            createdAt={shoppingList.created_at}
-            isOpen={isOpen}
-            onDelete={handleDeleteList}
-          />
-        </CollapsibleTrigger>
+      <ShoppingListHeader
+        name={shoppingList.name}
+        totalItems={totalItems}
+        purchasedItems={purchasedItems}
+        progressPercentage={progressPercentage}
+        createdAt={shoppingList.created_at}
+        isOpen={isOpen}
+        onToggle={toggleOpen}
+        onDelete={handleDeleteList}
+      />
 
-        <CollapsibleContent>
-          <CardContent className="pt-0">
-            <ShoppingListContent
-              items={shoppingList.shopping_list_items || []}
-              onItemToggle={handleItemToggle}
-            />
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
+      {isOpen && (
+        <CardContent className="pt-0">
+          <ShoppingListContent
+            items={shoppingList.shopping_list_items || []}
+            onItemToggle={handleItemToggle}
+          />
+        </CardContent>
+      )}
     </Card>
   );
 };
