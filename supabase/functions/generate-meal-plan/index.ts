@@ -28,22 +28,29 @@ serve(async (req) => {
     // Initialize OpenAI service
     const openAIService = new OpenAIService(openAIApiKey!);
     
-    // Generate meal plan with extended timeout for longer generation
-    console.log('Starting meal plan generation with 2 minute timeout...');
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout after 2 minutes')), 120000)
-    );
-    
-    const mealPlanPromise = openAIService.generateMealPlan(profile, planDetails, dailyCalories);
-    
-    const mealPlan = await Promise.race([mealPlanPromise, timeoutPromise]);
+    // Generate meal plan with no timeout - let it run as long as needed
+    console.log('Starting meal plan generation...');
+    const mealPlan = await openAIService.generateMealPlan(profile, planDetails, dailyCalories);
 
+    console.log('Meal plan generated successfully with', mealPlan.meals.length, 'meals');
     return new Response(JSON.stringify(mealPlan), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in generate-meal-plan function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    
+    // More detailed error logging
+    if (error instanceof SyntaxError) {
+      console.error('JSON Parse Error Details:', {
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      type: error.constructor.name 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
