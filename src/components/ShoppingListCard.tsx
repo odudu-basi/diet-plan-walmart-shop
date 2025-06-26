@@ -11,10 +11,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 interface ShoppingListItem {
   id: string;
-  name: string;
+  ingredient_name: string;
   category: string;
-  quantity: string;
+  quantity: number;
+  unit: string;
   is_purchased: boolean;
+  estimated_cost: number;
+  notes: string;
+  shopping_list_id: string;
 }
 
 interface ShoppingList {
@@ -177,13 +181,11 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
                                   : 'text-gray-900'
                               }`}
                             >
-                              {item.name}
+                              {item.ingredient_name}
                             </span>
-                            {item.quantity && (
-                              <span className="text-sm text-gray-500">
-                                {item.quantity}
-                              </span>
-                            )}
+                            <span className="text-sm text-gray-500">
+                              {item.quantity} {item.unit}
+                            </span>
                           </div>
                         </div>
                       ))}

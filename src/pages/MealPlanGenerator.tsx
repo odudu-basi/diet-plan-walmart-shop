@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,8 +150,36 @@ const MealPlanGenerator = () => {
 
       console.log('Saved meal plan:', mealPlan);
 
-      // Save individual meals
+      // Create shopping list for the meal plan
+      console.log('Creating shopping list for meal plan...');
+      const { data: shoppingList, error: shoppingListError } = await supabase
+        .from('shopping_lists')
+        .insert({
+          user_id: user.id,
+          name: `${formData.planName} Shopping List`,
+          meal_plan_id: mealPlan.id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (shoppingListError) {
+        console.error('Shopping list creation error:', shoppingListError);
+        throw new Error(`Failed to create shopping list: ${shoppingListError.message}`);
+      }
+
+      console.log('Created shopping list:', shoppingList);
+
+      // Save individual meals and collect ingredients
       console.log('Saving meals to database...');
+      const allIngredients: Array<{
+        ingredient_name: string;
+        quantity: number;
+        unit: string;
+        category: string;
+        estimated_cost: number;
+      }> = [];
+
       for (const meal of result.meals) {
         console.log('Saving meal:', meal.name);
         const { data: savedMeal, error: mealError } = await supabase
@@ -176,7 +203,7 @@ const MealPlanGenerator = () => {
           throw new Error(`Failed to save meal ${meal.name}: ${mealError.message}`);
         }
 
-        // Save ingredients for each meal
+        // Save ingredients for each meal and collect for shopping list
         if (meal.ingredients && meal.ingredients.length > 0) {
           console.log(`Saving ${meal.ingredients.length} ingredients for meal:`, meal.name);
           for (const ingredient of meal.ingredients) {
@@ -193,16 +220,56 @@ const MealPlanGenerator = () => {
 
             if (ingredientError) {
               console.error('Ingredient save error:', ingredientError);
-              // Don't throw here, just log the error
+            }
+
+            // Add to shopping list ingredients (combine duplicates)
+            const existingIngredient = allIngredients.find(
+              item => item.ingredient_name.toLowerCase() === ingredient.name.toLowerCase() && 
+                     item.unit === ingredient.unit
+            );
+
+            if (existingIngredient) {
+              existingIngredient.quantity += ingredient.quantity;
+            } else {
+              allIngredients.push({
+                ingredient_name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                category: ingredient.category || 'Other',
+                estimated_cost: ingredient.estimatedCost
+              });
             }
           }
+        }
+      }
+
+      // Add all ingredients to the shopping list
+      if (allIngredients.length > 0) {
+        console.log(`Adding ${allIngredients.length} unique ingredients to shopping list...`);
+        const shoppingListItems = allIngredients.map(ingredient => ({
+          shopping_list_id: shoppingList.id,
+          ingredient_name: ingredient.ingredient_name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          category: ingredient.category || 'Other',
+          estimated_cost: ingredient.estimated_cost,
+          is_purchased: false
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('shopping_list_items')
+          .insert(shoppingListItems);
+
+        if (itemsError) {
+          console.error('Shopping list items creation error:', itemsError);
+          // Don't throw here, the meal plan is already created
         }
       }
 
       console.log('Meal plan generation completed successfully');
       toast({
         title: "Meal Plan Generated!",
-        description: "Your personalized meal plan has been created successfully.",
+        description: "Your personalized meal plan and shopping list have been created successfully.",
       });
 
       navigate('/dashboard');
