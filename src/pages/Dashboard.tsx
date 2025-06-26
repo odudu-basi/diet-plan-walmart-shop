@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { CalendarDays, Plus, User, Utensils, ShoppingCart, Target, Clock, Eye } 
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   // Fetch user profile
   const { data: profile } = useQuery({
@@ -87,7 +86,7 @@ const Dashboard = () => {
             </Button>
             <Button 
               variant="outline" 
-              onClick={signOut}
+              onClick={logout}
               className="text-red-600 hover:text-red-700"
             >
               Sign Out
