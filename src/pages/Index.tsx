@@ -1,36 +1,21 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingCart, Target, Heart } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
+import AuthenticatedApp from "@/components/auth/AuthenticatedApp";
 
 const Index = () => {
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [signupForm, setSignupForm] = useState({ 
-    email: '', 
-    password: '', 
-    confirmPassword: '' 
-  });
+  const { user, login, signUp, isLoading, error } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Login attempt:', loginForm);
-    // TODO: Implement authentication logic
-  };
+  // If user is authenticated, show the authenticated app
+  if (user) {
+    return <AuthenticatedApp />;
+  }
 
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (signupForm.password !== signupForm.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
-    }
-    console.log('Signup attempt:', signupForm);
-    // TODO: Implement authentication logic
-  };
-
+  // Otherwise show the authentication forms
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 flex flex-col">
       {/* Header */}
@@ -68,79 +53,19 @@ const Index = () => {
               </TabsList>
               
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={loginForm.email}
-                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full h-12 bg-green-600 hover:bg-green-700">
-                    Log In
-                  </Button>
-                </form>
+                <LoginForm 
+                  onLogin={login}
+                  isLoading={isLoading}
+                  error={error}
+                />
               </TabsContent>
 
               <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={signupForm.email}
-                      onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Create a password"
-                      value={signupForm.password}
-                      onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={signupForm.confirmPassword}
-                      onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700">
-                    Sign Up
-                  </Button>
-                </form>
+                <SignUpForm 
+                  onSignUp={signUp}
+                  isLoading={isLoading}
+                  error={error}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>
