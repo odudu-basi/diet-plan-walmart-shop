@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarDays, Utensils, Loader2, Clock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart } from "lucide-react";
 
-interface MealPlanFormData {
+export interface MealPlanFormData {
   planName: string;
   duration: string;
   targetCalories: string;
@@ -94,6 +95,16 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
               value={formData.additionalNotes}
               onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
             />
+          </div>
+
+          <div className="flex items-center space-x-2 p-4 bg-green-50 rounded-lg">
+            <Checkbox id="createShoppingList" checked={true} disabled />
+            <div className="flex items-center space-x-2">
+              <ShoppingCart className="h-4 w-4 text-green-600" />
+              <Label htmlFor="createShoppingList" className="text-sm font-medium">
+                Automatically create shopping list
+              </Label>
+            </div>
           </div>
 
           {isGenerating && (

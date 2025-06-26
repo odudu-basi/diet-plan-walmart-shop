@@ -43,29 +43,59 @@ export interface MealPlan {
   meals: Meal[];
 }
 
-export const useMealPlanGeneration = () => {
+export interface MealPlanFormData {
+  planName: string;
+  duration: string;
+  targetCalories: string;
+  additionalNotes: string;
+}
+
+export const useMealPlanGeneration = (profile: any) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
   const { toast } = useToast();
 
-  const generateMealPlan = async (
-    profile: UserProfile,
-    planDetails: PlanDetails,
-    userId: string
-  ) => {
+  const generateMealPlan = async (formData: MealPlanFormData) => {
+    if (!profile) {
+      toast({
+        title: "Error",
+        description: "Profile data is required to generate meal plans.",
+        variant: "destructive",
+      });
+      return { success: false, error: "Profile data missing" };
+    }
+
     setIsGenerating(true);
     setProgress(0);
     setCurrentStep('Initializing meal plan generation...');
 
     try {
+      // Convert form data to the expected format
+      const userProfile: UserProfile = {
+        age: profile.age,
+        weight: profile.weight,
+        height: profile.height,
+        goal: profile.goal,
+        activityLevel: profile.activity_level,
+        dietaryRestrictions: profile.dietary_restrictions || [],
+        allergies: profile.allergies || 'None',
+        budgetRange: profile.budget_range || '50-100'
+      };
+
+      const planDetails: PlanDetails = {
+        duration: parseInt(formData.duration),
+        targetCalories: formData.targetCalories ? parseInt(formData.targetCalories) : undefined,
+        createShoppingList: true
+      };
+
       // Step 1: Generate meal plan via edge function
       setProgress(20);
       setCurrentStep('Generating personalized meals...');
       
       console.log('Calling meal plan generation function...');
       const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
-        body: { profile, planDetails }
+        body: { profile: userProfile, planDetails }
       });
 
       if (functionError) {
@@ -91,8 +121,8 @@ export const useMealPlanGeneration = () => {
       const { data: savedMealPlan, error: mealPlanError } = await supabase
         .from('meal_plans')
         .insert({
-          user_id: userId,
-          name: `${planDetails.duration}-Day Meal Plan`,
+          user_id: profile.id,
+          name: formData.planName || `${planDetails.duration}-Day Meal Plan`,
           description: `Generated meal plan for ${profile.goal} goal`,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
@@ -122,7 +152,7 @@ export const useMealPlanGeneration = () => {
             name: meal.name,
             meal_type: meal.type,
             day_of_week: meal.dayOfWeek,
-            instructions: meal.instructions,
+            recipe_instructions: meal.instructions,
             prep_time_minutes: meal.prepTime,
             cook_time_minutes: meal.cookTime,
             servings: meal.servings,
@@ -168,7 +198,7 @@ export const useMealPlanGeneration = () => {
         try {
           const shoppingListId = await generateShoppingListFromMealPlan(
             savedMealPlan.id,
-            userId,
+            profile.id,
             `${savedMealPlan.name} - Shopping List`
           );
           console.log('Created shopping list:', shoppingListId);
