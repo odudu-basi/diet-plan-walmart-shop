@@ -40,7 +40,7 @@ Plan Requirements:
 - Plan Name: ${planDetails.planName}
 - Additional Notes: ${planDetails.additionalNotes || 'None'}
 
-Create a meal plan with breakfast, lunch, dinner, and one snack for ${Math.min(planDetails.duration, 3)} days. Each meal should include:
+Create a meal plan with breakfast, lunch, dinner, and one snack for ${planDetails.duration} days. Each meal should include:
 1. Meal name
 2. Cooking instructions (keep concise)
 3. Prep time and cook time
@@ -86,7 +86,7 @@ Response format:
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a ${Math.min(planDetails.duration, 3)}-day meal plan. Respond with ONLY valid JSON.` }
+          { role: 'user', content: `Generate a ${planDetails.duration}-day meal plan. Respond with ONLY valid JSON.` }
         ],
         temperature: 0.2,
         max_tokens: 8000,
