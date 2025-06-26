@@ -22,7 +22,7 @@ serve(async (req) => {
     const bmr = calculateBMR(profile.age, profile.weight, profile.height, 'male'); // Simplified - could be improved
     const dailyCalories = planDetails.targetCalories || calculateDailyCalories(bmr, profile.activityLevel, profile.goal);
 
-    const systemPrompt = `You are a professional nutritionist and meal planning expert. Create a detailed weekly meal plan based on the user's profile and goals.
+    const systemPrompt = `You are a professional nutritionist and meal planning expert. Create a detailed meal plan based on the user's profile and goals.
 
 User Profile:
 - Age: ${profile.age} years
@@ -40,31 +40,24 @@ Plan Requirements:
 - Plan Name: ${planDetails.planName}
 - Additional Notes: ${planDetails.additionalNotes || 'None'}
 
-Create a comprehensive meal plan with breakfast, lunch, dinner, and snacks for each day. Each meal should include:
+Create a meal plan with breakfast, lunch, dinner, and one snack for ${Math.min(planDetails.duration, 3)} days. Each meal should include:
 1. Meal name
-2. Detailed cooking instructions
+2. Cooking instructions (keep concise)
 3. Prep time and cook time
 4. Number of servings
 5. Estimated calories per serving
-6. Complete ingredient list with quantities and units
-7. Ingredient categories for shopping organization
-8. Estimated cost per ingredient (in USD)
+6. Complete ingredient list with quantities, units, categories, and estimated costs
 
-Focus on:
-- Meeting the user's specific health goals
-- Accommodating dietary restrictions and allergies
-- Staying within budget constraints
-- Providing variety and balanced nutrition
-- Realistic prep times for busy lifestyles
+CRITICAL: You must respond with ONLY valid JSON. No explanatory text, no markdown, no additional content.
 
-IMPORTANT: You must respond with ONLY a valid JSON object and nothing else. Do not include any explanatory text, markdown formatting, or additional content. Return the response as a JSON object with this exact structure:
+Response format:
 {
   "meals": [
     {
       "name": "Meal Name",
       "type": "breakfast|lunch|dinner|snack",
       "dayOfWeek": 0-6,
-      "instructions": "Detailed cooking instructions",
+      "instructions": "Concise cooking instructions",
       "prepTime": 15,
       "cookTime": 20,
       "servings": 2,
@@ -93,10 +86,10 @@ IMPORTANT: You must respond with ONLY a valid JSON object and nothing else. Do n
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a ${planDetails.duration}-day meal plan for "${planDetails.planName}". Remember to respond with ONLY valid JSON and no additional text.` }
+          { role: 'user', content: `Generate a ${Math.min(planDetails.duration, 3)}-day meal plan. Respond with ONLY valid JSON.` }
         ],
-        temperature: 0.3,
-        max_tokens: 4000,
+        temperature: 0.2,
+        max_tokens: 8000,
       }),
     });
 
@@ -114,15 +107,14 @@ IMPORTANT: You must respond with ONLY a valid JSON object and nothing else. Do n
     }
 
     const generatedContent = data.choices[0].message.content;
-    console.log('Raw AI response:', generatedContent);
+    console.log('Raw AI response length:', generatedContent.length);
 
-    // Parse JSON response with better error handling
+    // Parse JSON response with robust error handling
     let mealPlan;
     try {
-      // Try to extract JSON from the response if it contains additional text
       let jsonString = generatedContent.trim();
       
-      // Look for JSON object starting with { and ending with }
+      // Extract JSON from response
       const startIndex = jsonString.indexOf('{');
       const lastIndex = jsonString.lastIndexOf('}');
       
@@ -130,7 +122,19 @@ IMPORTANT: You must respond with ONLY a valid JSON object and nothing else. Do n
         jsonString = jsonString.substring(startIndex, lastIndex + 1);
       }
       
-      console.log('Attempting to parse JSON:', jsonString.substring(0, 200) + '...');
+      console.log('Attempting to parse JSON...');
+      
+      // Try to fix common JSON truncation issues
+      if (!jsonString.endsWith('}')) {
+        console.log('Response appears truncated, attempting to fix...');
+        
+        // Find the last complete meal object
+        const lastCompleteObject = jsonString.lastIndexOf('    }');
+        if (lastCompleteObject !== -1) {
+          jsonString = jsonString.substring(0, lastCompleteObject + 5) + '\n  ]\n}';
+        }
+      }
+      
       mealPlan = JSON.parse(jsonString);
       
       // Validate the structure
@@ -141,8 +145,8 @@ IMPORTANT: You must respond with ONLY a valid JSON object and nothing else. Do n
       console.log('Successfully parsed meal plan with', mealPlan.meals.length, 'meals');
       
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      console.error('Raw response content:', generatedContent);
+      console.error('Failed to parse AI response:', parseError.message);
+      console.error('Response content preview:', generatedContent.substring(0, 500));
       throw new Error(`Invalid response format from AI: ${parseError.message}`);
     }
 
