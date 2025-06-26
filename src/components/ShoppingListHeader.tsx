@@ -31,19 +31,20 @@ const ShoppingListHeader = ({
       className="cursor-pointer hover:bg-gray-50 transition-colors pb-4"
       onClick={onToggle}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
-            <CardTitle className="text-lg truncate">{name}</CardTitle>
-            <ShoppingListProgress
-              totalItems={totalItems}
-              purchasedItems={purchasedItems}
-              progressPercentage={progressPercentage}
-              createdAt={createdAt}
-            />
+          <CardTitle className="text-lg truncate mb-1">{name}</CardTitle>
+          <div className="flex items-center gap-1 text-sm text-gray-500">
+            <span>{new Date(createdAt).toLocaleDateString()}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">{totalItems} items</span>
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+              {progressPercentage}%
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="icon"
