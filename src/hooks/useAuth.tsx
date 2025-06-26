@@ -59,6 +59,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
+
+      // Redirect to dashboard after successful login
+      window.location.href = '/dashboard';
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);
@@ -85,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Password must be at least 6 characters long');
       }
 
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/profile-setup`;
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -101,6 +104,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Account Created!",
         description: "Welcome to Diet Shopping App! Please check your email to verify your account.",
       });
+
+      // Redirect to profile setup after successful signup
+      window.location.href = '/profile-setup';
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Sign up failed';
       setError(errorMessage);

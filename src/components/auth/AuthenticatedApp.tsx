@@ -10,8 +10,8 @@ const AuthenticatedApp = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleSetupProfile = () => {
-    navigate('/profile-setup');
+  const handleGoToDashboard = () => {
+    navigate('/dashboard');
   };
 
   return (
@@ -41,18 +41,18 @@ const AuthenticatedApp = () => {
               Diet Shopping App
             </CardTitle>
             <CardDescription>
-              You're successfully logged in! Next, we'll set up your profile.
+              You're successfully logged in! Ready to start your diet journey?
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-gray-600 mb-4">
-              Ready to start your personalized diet journey?
+              Access your dashboard to view meal plans and shopping lists.
             </p>
             <Button 
-              onClick={handleSetupProfile}
+              onClick={handleGoToDashboard}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              Set Up Profile
+              Go to Dashboard
             </Button>
           </CardContent>
         </Card>
