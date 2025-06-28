@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Users, Flame, ChefHat } from "lucide-react";
+import { ArrowLeft, Clock, Users, Flame, ChefHat, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MealDetailDialog from "@/components/MealDetailDialog";
 
@@ -130,35 +130,65 @@ const WeeklyMealPlan = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-blue-50">
+      {/* Enhanced Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-green-100 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/dashboard')}
-              className="mr-4"
+              className="text-gray-600 hover:text-gray-800 hover:bg-green-50"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
+          </div>
+          
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 rounded-full shadow-lg">
+                <ChefHat className="h-12 w-12 text-white" />
+              </div>
+            </div>
+            
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-                <ChefHat className="h-8 w-8 text-green-600 mr-3" />
+              <h1 className="text-4xl font-bold text-gray-800 mb-3">
                 {mealPlan.name}
               </h1>
-              <p className="text-gray-600 mt-1">{mealPlan.description}</p>
-              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                <span>{new Date(mealPlan.start_date).toLocaleDateString()} - {new Date(mealPlan.end_date).toLocaleDateString()}</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {meals?.length || 0} meals planned
-                </Badge>
+              {mealPlan.description && (
+                <p className="text-lg text-gray-600 mb-4 max-w-2xl mx-auto">
+                  {mealPlan.description}
+                </p>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+              <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-green-200">
+                <Calendar className="h-4 w-4 text-green-600" />
+                <span className="text-gray-700 font-medium">
+                  {new Date(mealPlan.start_date).toLocaleDateString()} - {new Date(mealPlan.end_date).toLocaleDateString()}
+                </span>
+              </div>
+              
+              <Badge variant="secondary" className="bg-green-100 text-green-800 border border-green-200 px-4 py-2 text-sm font-medium">
+                <ChefHat className="h-4 w-4 mr-2" />
+                {meals?.length || 0} meals planned
+              </Badge>
+              
+              <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-green-200">
+                <Flame className="h-4 w-4 text-orange-500" />
+                <span className="text-gray-700 font-medium">
+                  Nutritionally Balanced
+                </span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-4 pt-8">
         {/* Meal Plan Grid */}
         <div className="space-y-8">
           {Object.keys(mealsByDay)
