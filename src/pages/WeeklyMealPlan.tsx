@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from "@/hooks/useAuth";
@@ -131,64 +130,57 @@ const WeeklyMealPlan = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-blue-50">
-      {/* Enhanced Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-green-100 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
+      {/* Compact Mobile-Friendly Header */}
+      <div className="bg-white/90 backdrop-blur-sm border-b border-green-100 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          {/* Top Row - Back Button and Meal Count */}
+          <div className="flex items-center justify-between mb-3">
             <Button 
               variant="ghost" 
+              size="sm"
               onClick={() => navigate('/dashboard')}
               className="text-gray-600 hover:text-gray-800 hover:bg-green-50"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              <ArrowLeft className="h-4 w-4" />
             </Button>
+            
+            <Badge variant="secondary" className="bg-green-100 text-green-700 border border-green-200 text-xs">
+              <ChefHat className="h-3 w-3 mr-1" />
+              {meals?.length || 0} meals
+            </Badge>
           </div>
           
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 rounded-full shadow-lg">
-                <ChefHat className="h-12 w-12 text-white" />
-              </div>
+          {/* Main Title */}
+          <div className="text-center mb-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1 line-clamp-2">
+              {mealPlan.name}
+            </h1>
+            {mealPlan.description && (
+              <p className="text-sm md:text-base text-gray-600 line-clamp-2 max-w-2xl mx-auto">
+                {mealPlan.description}
+              </p>
+            )}
+          </div>
+          
+          {/* Bottom Row - Date Range and Status */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs md:text-sm">
+            <div className="flex items-center space-x-1 bg-white/70 px-3 py-1 rounded-full border border-green-200">
+              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+              <span className="text-gray-700 font-medium">
+                {new Date(mealPlan.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(mealPlan.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
             </div>
             
-            <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-3">
-                {mealPlan.name}
-              </h1>
-              {mealPlan.description && (
-                <p className="text-lg text-gray-600 mb-4 max-w-2xl mx-auto">
-                  {mealPlan.description}
-                </p>
-              )}
-            </div>
-            
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-              <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-green-200">
-                <Calendar className="h-4 w-4 text-green-600" />
-                <span className="text-gray-700 font-medium">
-                  {new Date(mealPlan.start_date).toLocaleDateString()} - {new Date(mealPlan.end_date).toLocaleDateString()}
-                </span>
-              </div>
-              
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border border-green-200 px-4 py-2 text-sm font-medium">
-                <ChefHat className="h-4 w-4 mr-2" />
-                {meals?.length || 0} meals planned
-              </Badge>
-              
-              <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-green-200">
-                <Flame className="h-4 w-4 text-orange-500" />
-                <span className="text-gray-700 font-medium">
-                  Nutritionally Balanced
-                </span>
-              </div>
+            <div className="flex items-center space-x-1 bg-white/70 px-3 py-1 rounded-full border border-green-200">
+              <Flame className="h-3 w-3 md:h-4 md:w-4 text-orange-500" />
+              <span className="text-gray-700 font-medium">Balanced</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-4 pt-8">
+      <div className="max-w-6xl mx-auto p-4">
         {/* Meal Plan Grid */}
         <div className="space-y-8">
           {Object.keys(mealsByDay)
