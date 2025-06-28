@@ -22,7 +22,7 @@ export class OpenAIService {
     const prompt = this.buildEnhancedCreativeMealPlanPrompt(profile, planDetails, dailyCalories, macroStrategy);
     
     try {
-      console.log('Calling OpenAI API with GPT-4.1 for ultra-creative meal generation...');
+      console.log('Calling OpenAI API with GPT-4.1 for creative meal generation...');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -34,14 +34,14 @@ export class OpenAIService {
           messages: [
             {
               role: 'system',
-              content: 'You are an ultra-creative culinary AI genius who creates completely unique, innovative meal plans that no one has ever seen before. You specialize in fusion cuisines, unexpected flavor combinations, and Instagram-worthy presentations. You ALWAYS respond with perfect, valid JSON format. Every meal plan you create is a culinary masterpiece that surprises and delights.'
+              content: 'You are a creative culinary AI that creates unique, practical meal plans. You specialize in simple, wholesome breakfasts and creative lunch/dinner combinations. You ALWAYS respond with perfect, valid JSON format. Every meal plan balances creativity with practicality.'
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.9, // Maximum creativity
+          temperature: 0.8, // High creativity but controlled
           max_tokens: 4000,
           presence_penalty: 0.6, // Encourage new topics
           frequency_penalty: 0.8, // Avoid repetition
@@ -53,10 +53,10 @@ export class OpenAIService {
       }
 
       const data = await response.json();
-      console.log('OpenAI GPT-4.1 API response received for ultra-creative meal plan');
+      console.log('OpenAI GPT-4.1 API response received for creative meal plan');
 
       const content = data.choices[0].message.content;
-      console.log('Parsing ultra-creative AI response...');
+      console.log('Parsing AI response...');
       
       return this.parseAIResponseWithEnhancedHandling(content, planDetails.duration);
     } catch (error) {
@@ -71,17 +71,17 @@ export class OpenAIService {
     const uniqueThemes = this.generateUniqueCreativityThemes(creativityId);
     
     return `
-    🎨 ULTRA-CREATIVE MEAL PLAN CHALLENGE 🎨
-    Create a COMPLETELY REVOLUTIONARY ${planDetails.duration}-day meal plan that has NEVER existed before!
+    🎨 CREATIVE MEAL PLAN CHALLENGE 🎨
+    Create a UNIQUE ${planDetails.duration}-day meal plan with perfect variety and creativity balance!
     
-    CREATIVITY MANDATE: This meal plan must be so unique and creative that it could be featured in a top culinary magazine. Every single meal should be an innovative fusion of flavors, techniques, and presentations that surprise and delight.
+    CREATIVITY MANDATE: This meal plan must be completely different from any previous plans. Focus on practical creativity - meals that are exciting but achievable.
     
     PROFILE & GOALS:
     - Person: ${profile.age}yo, ${profile.weight}lbs, ${profile.height}", Goal: ${profile.goal}
     - Daily Target: ${dailyCalories} calories (${macroStrategy.description})
     - Activity: ${profile.activityLevel} | Restrictions: ${profile.dietaryRestrictions?.join(', ') || 'None'}
     - Allergies: ${profile.allergies || 'None'} | Budget: $${profile.budgetRange || '50-100'}/week
-    - Special Notes: ${planDetails.additionalNotes || 'Surprise me with creativity!'}
+    - Special Notes: ${planDetails.additionalNotes || 'Balance creativity with practicality!'}
     
     🌟 UNIQUE CREATIVE THEMES FOR THIS PLAN:
     ${uniqueThemes.primaryTheme}
@@ -89,63 +89,82 @@ export class OpenAIService {
     ${uniqueThemes.cookingStyle}
     ${uniqueThemes.presentationStyle}
     
-    🎭 INNOVATION REQUIREMENTS:
-    - Every meal name must be creative and Instagram-worthy
-    - Combine unexpected ingredients that surprisingly work together
-    - Use fusion techniques (Korean-Italian, Mexican-Japanese, Indian-French, etc.)
-    - Include interesting textures and temperature contrasts
-    - Create meals that tell a story or evoke emotions
-    - Use creative plating and presentation techniques
-    - Include both familiar comfort elements with exotic twists
+    🥞 BREAKFAST REQUIREMENTS (KEEP SIMPLE & PRACTICAL):
+    - Simple, wholesome, and quick to prepare (10-20 minutes max)
+    - Focus on classic breakfast foods with small creative twists
+    - Examples: "Cinnamon Apple Overnight Oats", "Greek Yogurt Berry Parfait", "Avocado Toast with Everything Seasoning"
+    - NO elaborate fusion breakfasts or restaurant-style complexity
+    - Emphasize nutrition, energy, and ease of preparation
     
-    🍳 MEAL CREATIVITY MANDATES:
-    - NO basic meals (no "Grilled Chicken with Rice")
-    - Every breakfast should be a creative morning adventure
-    - Every lunch should be a midday flavor explosion
-    - Every dinner should be an evening culinary masterpiece
-    - Use unexpected cooking methods and combinations
-    - Create meals that sound like they belong in a trendy restaurant
+    🍽️ LUNCH & DINNER REQUIREMENTS (MORE CREATIVE):
+    - Lunch and dinner can be more creative and fusion-inspired
+    - Use interesting flavor combinations and cooking techniques
+    - Include fusion cuisines and creative presentations
+    - Focus on satisfying, complete meals with good variety
     
-    WALMART INGREDIENTS (be wildly creative with combinations):
+    🔄 MEAL ORDERING REQUIREMENT:
+    - For each day (0-${planDetails.duration - 1}), provide meals in this EXACT order:
+      1. Breakfast (dayOfWeek: X, type: "breakfast")
+      2. Lunch (dayOfWeek: X, type: "lunch") 
+      3. Dinner (dayOfWeek: X, type: "dinner")
+    - This ensures proper meal sequence in the generated plan
+    
+    WALMART INGREDIENTS (be creative with combinations):
     PROTEINS: chicken, turkey, salmon, shrimp, eggs, Greek yogurt, beans, lentils, tofu
     PRODUCE: all fresh vegetables, fruits, herbs, and creative combinations
     PANTRY: spices, sauces, oils, vinegars, nuts, seeds for unlimited creativity
     
     NUTRITION TARGETS PER DAY:
-    - Breakfast: ${Math.round(dailyCalories * 0.25)} cal
-    - Lunch: ${Math.round(dailyCalories * 0.35)} cal  
-    - Dinner: ${Math.round(dailyCalories * 0.40)} cal
+    - Breakfast: ${Math.round(dailyCalories * 0.25)} cal (SIMPLE & WHOLESOME)
+    - Lunch: ${Math.round(dailyCalories * 0.35)} cal (CREATIVE & SATISFYING)
+    - Dinner: ${Math.round(dailyCalories * 0.40)} cal (CREATIVE & COMPLETE)
     - Protein: ${Math.round(dailyCalories * macroStrategy.protein / 100 / 4)}g
     - Carbs: ${Math.round(dailyCalories * macroStrategy.carbs / 100 / 4)}g
     - Fat: ${Math.round(dailyCalories * macroStrategy.fat / 100 / 9)}g
     
-    🎯 CRITICAL: Return ONLY perfect, valid JSON. No markdown, no extra text, just clean JSON:
+    🎯 CRITICAL: Return ONLY perfect, valid JSON. No markdown, no extra text, just clean JSON.
+    
+    Order meals by day, then by meal type (breakfast first, lunch second, dinner third for each day):
     
     {
       "meals": [
         {
-          "name": "Ultra-creative meal name that sounds amazing",
-          "type": "breakfast|lunch|dinner",
-          "dayOfWeek": 0-6,
-          "instructions": "Detailed, step-by-step creative cooking instructions",
-          "prepTime": 10-30,
-          "cookTime": 15-45,
+          "name": "Simple breakfast name (practical and wholesome)",
+          "type": "breakfast",
+          "dayOfWeek": 0,
+          "instructions": "Simple, clear breakfast preparation steps",
+          "prepTime": 5-15,
+          "cookTime": 0-10,
           "servings": 1,
-          "calories": target_calories_for_meal_type,
-          "ingredients": [
-            {
-              "name": "specific ingredient",
-              "quantity": number,
-              "unit": "cup|oz|tbsp|piece|etc",
-              "category": "Produce|Meat|Dairy|Pantry|Grains",
-              "estimatedCost": realistic_price
-            }
-          ]
+          "calories": breakfast_target_calories,
+          "ingredients": [...]
+        },
+        {
+          "name": "Creative lunch name that sounds delicious",
+          "type": "lunch", 
+          "dayOfWeek": 0,
+          "instructions": "Detailed, creative lunch preparation",
+          "prepTime": 15-25,
+          "cookTime": 15-30,
+          "servings": 1,
+          "calories": lunch_target_calories,
+          "ingredients": [...]
+        },
+        {
+          "name": "Creative dinner name that sounds amazing",
+          "type": "dinner",
+          "dayOfWeek": 0,
+          "instructions": "Detailed, creative dinner preparation",
+          "prepTime": 20-30,
+          "cookTime": 25-40,
+          "servings": 1,
+          "calories": dinner_target_calories,
+          "ingredients": [...]
         }
       ]
     }
     
-    Make this the most creative, unique, and exciting meal plan ever created!
+    Make this meal plan completely unique with perfect meal ordering and balanced creativity!
     `;
   }
 
@@ -237,12 +256,21 @@ export class OpenAIService {
         throw new Error('Invalid meal plan structure - missing meals array');
       }
       
+      // Sort meals properly: by day, then by meal type order
+      const mealTypeOrder = { 'breakfast': 0, 'lunch': 1, 'dinner': 2 };
+      const sortedMeals = parsed.meals.sort((a, b) => {
+        if (a.dayOfWeek !== b.dayOfWeek) {
+          return a.dayOfWeek - b.dayOfWeek;
+        }
+        return mealTypeOrder[a.type] - mealTypeOrder[b.type];
+      });
+      
       // Validate and clean up parsed meals
-      const validatedMeals = parsed.meals.map((meal: any, index: number) => ({
+      const validatedMeals = sortedMeals.map((meal: any, index: number) => ({
         name: meal.name || `Creative Meal ${index + 1}`,
         type: meal.type || (index % 3 === 0 ? 'breakfast' : index % 3 === 1 ? 'lunch' : 'dinner'),
-        dayOfWeek: meal.dayOfWeek || Math.floor(index / 3),
-        instructions: meal.instructions || 'Prepare with creativity and love',
+        dayOfWeek: meal.dayOfWeek !== undefined ? meal.dayOfWeek : Math.floor(index / 3),
+        instructions: meal.instructions || 'Prepare with care and creativity',
         prepTime: meal.prepTime || 15,
         cookTime: meal.cookTime || 20,
         servings: meal.servings || 1,
@@ -250,35 +278,36 @@ export class OpenAIService {
         ingredients: Array.isArray(meal.ingredients) ? meal.ingredients : this.getDefaultIngredients(meal.type || 'lunch')
       }));
       
-      console.log(`Successfully parsed ultra-creative meal plan with ${validatedMeals.length} unique meals`);
+      console.log(`Successfully parsed creative meal plan with ${validatedMeals.length} meals in proper order`);
       return { meals: validatedMeals };
       
     } catch (error) {
-      console.error('Failed to parse creative GPT-4.1 response:', error);
+      console.error('Failed to parse GPT-4.1 response:', error);
       console.log('Raw response length:', content.length);
       console.log('Response preview:', content.substring(0, 500) + '...');
       
-      // Enhanced fallback with more variety
-      console.log('Generating ultra-creative fallback meal plan...');
-      return this.generateUltraCreativeFallbackMealPlan(duration);
+      // Enhanced fallback with proper ordering
+      console.log('Generating creative fallback meal plan with proper ordering...');
+      return this.generateCreativeFallbackMealPlan(duration);
     }
   }
 
-  private generateUltraCreativeFallbackMealPlan(duration: number): MealPlan {
+  private generateCreativeFallbackMealPlan(duration: number): MealPlan {
     const meals: Meal[] = [];
     const timestamp = Date.now();
     
-    // Ultra-creative meal names and combinations
-    const creativeBreakfasts = [
-      { name: "Dragon Fruit Sunrise Bowl with Coconut-Lime Granola", style: "tropical-fusion" },
-      { name: "Mediterranean Shakshuka Flatbread with Herbed Yogurt", style: "middle-eastern" },
-      { name: "Korean-Inspired Kimchi Scramble with Sesame Avocado", style: "asian-fusion" },
-      { name: "Moroccan Spiced Quinoa Porridge with Date-Walnut Crumble", style: "north-african" },
-      { name: "Mexican Street Corn Breakfast Bowl with Cotija Cream", style: "mexican-fusion" },
-      { name: "Japanese Tamago-Style Omelette with Miso-Glazed Vegetables", style: "japanese" },
-      { name: "Indian-Spiced Chickpea Pancakes with Mint-Cilantro Chutney", style: "indian-fusion" }
+    // Simple, practical breakfast options
+    const simpleBreakfasts = [
+      { name: "Greek Yogurt Berry Parfait with Granola", style: "simple" },
+      { name: "Avocado Toast with Everything Seasoning", style: "simple" },
+      { name: "Cinnamon Apple Overnight Oats", style: "simple" },
+      { name: "Spinach and Cheese Scrambled Eggs", style: "simple" },
+      { name: "Peanut Butter Banana Smoothie Bowl", style: "simple" },
+      { name: "Whole Grain Toast with Almond Butter", style: "simple" },
+      { name: "Greek Yogurt with Honey and Walnuts", style: "simple" }
     ];
     
+    // Creative lunch options
     const creativeLunches = [
       { name: "Vietnamese Banh Mi Buddha Bowl with Pickled Vegetables", style: "vietnamese-fusion" },
       { name: "Greek-Mexican Fusion Gyro Bowl with Tzatziki-Lime Dressing", style: "mediterranean-mexican" },
@@ -289,6 +318,7 @@ export class OpenAIService {
       { name: "Cuban-Asian Mojo Pork Lettuce Cups with Plantain Chips", style: "cuban-asian" }
     ];
     
+    // Creative dinner options
     const creativeDinners = [
       { name: "Moroccan-Inspired Harissa Salmon with Pomegranate Couscous", style: "north-african" },
       { name: "Indian-Mexican Tandoori Chicken Tacos with Raita Verde", style: "indian-mexican" },
@@ -299,30 +329,31 @@ export class OpenAIService {
       { name: "Turkish-Mexican Spiced Lamb Bowls with Pomegranate Salsa", style: "turkish-mexican" }
     ];
     
+    // Generate meals in proper order: breakfast, lunch, dinner for each day
     for (let day = 0; day < duration; day++) {
-      const dayOffset = (timestamp + day) % 100; // Create variety based on timestamp
+      const dayOffset = (timestamp + day) % 100;
       
-      // Breakfast
-      const breakfast = creativeBreakfasts[(day + dayOffset) % creativeBreakfasts.length];
+      // Breakfast (simple and practical)
+      const breakfast = simpleBreakfasts[(day + dayOffset) % simpleBreakfasts.length];
       meals.push({
         name: breakfast.name,
         type: "breakfast",
         dayOfWeek: day,
-        instructions: `Create this ${breakfast.style} fusion breakfast by combining traditional techniques with modern presentation. Layer flavors carefully and garnish beautifully.`,
-        prepTime: 12,
-        cookTime: 18,
+        instructions: `Prepare this simple, nutritious breakfast. Focus on fresh ingredients and balanced nutrition for a great start to your day.`,
+        prepTime: 8,
+        cookTime: 5,
         servings: 1,
-        calories: 380,
-        ingredients: this.getCreativeIngredients("breakfast", breakfast.style)
+        calories: 320,
+        ingredients: this.getSimpleBreakfastIngredients(breakfast.style)
       });
       
-      // Lunch  
+      // Lunch (creative but balanced)
       const lunch = creativeLunches[(day + dayOffset * 2) % creativeLunches.length];
       meals.push({
         name: lunch.name,
         type: "lunch",
         dayOfWeek: day,
-        instructions: `Prepare this ${lunch.style} fusion lunch with attention to texture contrasts and bold flavor combinations. Build layers of taste for maximum impact.`,
+        instructions: `Prepare this ${lunch.style} fusion lunch with attention to texture contrasts and bold flavor combinations. Build layers of taste for maximum satisfaction.`,
         prepTime: 18,
         cookTime: 22,
         servings: 1,
@@ -330,13 +361,13 @@ export class OpenAIService {
         ingredients: this.getCreativeIngredients("lunch", lunch.style)
       });
       
-      // Dinner
+      // Dinner (creative and complete)
       const dinner = creativeDinners[(day + dayOffset * 3) % creativeDinners.length];
       meals.push({
         name: dinner.name,
         type: "dinner",
         dayOfWeek: day,
-        instructions: `Cook this ${dinner.style} fusion dinner with professional techniques. Focus on proper seasoning, temperature control, and elegant plating.`,
+        instructions: `Cook this ${dinner.style} fusion dinner with professional techniques. Focus on proper seasoning, temperature control, and elegant presentation.`,
         prepTime: 25,
         cookTime: 30,
         servings: 1,
@@ -345,8 +376,18 @@ export class OpenAIService {
       });
     }
     
-    console.log(`Generated ultra-creative fallback meal plan with ${meals.length} unique fusion meals`);
+    console.log(`Generated creative fallback meal plan with ${meals.length} properly ordered meals`);
     return { meals };
+  }
+
+  private getSimpleBreakfastIngredients(style: string) {
+    return [
+      { name: "Greek yogurt", quantity: 1, unit: "cup", category: "Dairy", estimatedCost: 0.80 },
+      { name: "mixed berries", quantity: 0.5, unit: "cup", category: "Produce", estimatedCost: 1.20 },
+      { name: "granola", quantity: 0.25, unit: "cup", category: "Pantry", estimatedCost: 0.50 },
+      { name: "honey", quantity: 1, unit: "tbsp", category: "Pantry", estimatedCost: 0.25 },
+      { name: "chopped nuts", quantity: 1, unit: "tbsp", category: "Pantry", estimatedCost: 0.30 }
+    ];
   }
 
   private getCreativeIngredients(mealType: string, style: string) {
