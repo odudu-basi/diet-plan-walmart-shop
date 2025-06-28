@@ -1,4 +1,3 @@
-
 import { UserProfile, PlanDetails, Meal, MealPlan } from './types.ts';
 
 export class OpenAIService {
@@ -23,7 +22,7 @@ export class OpenAIService {
     const prompt = this.buildWalmartMealPlanPrompt(profile, planDetails, dailyCalories, macroStrategy);
     
     try {
-      console.log('Calling OpenAI API with Walmart-specific meal generation...');
+      console.log('Calling OpenAI API with GPT-4.1 for enhanced meal generation...');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -31,19 +30,19 @@ export class OpenAIService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4.1-2025-04-14',
           messages: [
             {
               role: 'system',
-              content: 'You are a nutrition expert and meal planning specialist with extensive knowledge of Walmart grocery availability and pricing. Create diverse, goal-specific meal plans using only ingredients commonly available at Walmart.'
+              content: 'You are a nutrition expert and meal planning specialist with extensive knowledge of Walmart grocery availability and pricing. Create diverse, goal-specific meal plans using only ingredients commonly available at Walmart. Always return valid, properly formatted JSON.'
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.8, // Higher temperature for more variety
-          max_tokens: 4000,
+          temperature: 0.7, // Slightly lower for more consistent JSON formatting
+          max_tokens: 4500, // Increased for better handling of complex meal plans
         }),
       });
 
@@ -52,7 +51,7 @@ export class OpenAIService {
       }
 
       const data = await response.json();
-      console.log('OpenAI API response received');
+      console.log('OpenAI GPT-4.1 API response received');
 
       const content = data.choices[0].message.content;
       console.log('Parsing AI response...');
@@ -111,13 +110,13 @@ export class OpenAIService {
     
     Generate exactly ${planDetails.duration * 3} unique meals (breakfast, lunch, dinner for each day).
     
-    Return ONLY valid JSON in this exact format:
+    CRITICAL: Return ONLY valid JSON without any markdown formatting, comments, or extra text. Use this exact format:
     {
       "meals": [
         {
           "name": "Unique meal name",
-          "type": "breakfast|lunch|dinner",
-          "dayOfWeek": 0-6,
+          "type": "breakfast",
+          "dayOfWeek": 0,
           "instructions": "Detailed cooking instructions",
           "prepTime": 15,
           "cookTime": 20,
@@ -128,7 +127,7 @@ export class OpenAIService {
               "name": "ingredient name",
               "quantity": 1.5,
               "unit": "cup",
-              "category": "Produce|Meat|Dairy|Pantry",
+              "category": "Produce",
               "estimatedCost": 2.99
             }
           ]
@@ -136,7 +135,7 @@ export class OpenAIService {
       ]
     }
     
-    CRITICAL: Ensure all ingredients are commonly available at Walmart and include realistic estimated costs.
+    Ensure all ingredients are commonly available at Walmart with realistic estimated costs.
     `;
   }
 
@@ -175,31 +174,44 @@ export class OpenAIService {
 
   private parseAIResponse(content: string, duration: number): MealPlan {
     try {
-      console.log('Attempting to parse JSON...');
+      console.log('Attempting to parse JSON with enhanced error handling...');
       
-      // Clean the response
+      // Enhanced response cleaning for GPT-4.1
       let cleanedContent = content.trim();
       
-      // Remove any markdown formatting
-      if (cleanedContent.startsWith('```json')) {
-        cleanedContent = cleanedContent.replace(/```json\s*/, '').replace(/\s*```$/, '');
+      // Remove any markdown formatting more aggressively
+      cleanedContent = cleanedContent.replace(/```json\s*/gi, '').replace(/\s*```$/g, '');
+      cleanedContent = cleanedContent.replace(/```\s*/gi, '').replace(/\s*```$/g, '');
+      
+      // Remove any leading/trailing non-JSON content
+      const jsonStart = cleanedContent.indexOf('{');
+      const jsonEnd = cleanedContent.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
       }
       
       const parsed = JSON.parse(cleanedContent);
       
       if (!parsed.meals || !Array.isArray(parsed.meals)) {
-        throw new Error('Invalid meal plan structure');
+        throw new Error('Invalid meal plan structure - missing meals array');
       }
       
-      console.log(`Parsed meal plan with ${parsed.meals.length} meals`);
+      // Validate meal plan structure
+      const expectedMealCount = duration * 3;
+      if (parsed.meals.length !== expectedMealCount) {
+        console.warn(`Expected ${expectedMealCount} meals, got ${parsed.meals.length}`);
+      }
+      
+      console.log(`Successfully parsed meal plan with ${parsed.meals.length} meals using GPT-4.1`);
       return parsed;
       
     } catch (error) {
-      console.error('Failed to parse AI response:', error);
-      console.log('Response preview:', content.substring(0, 200) + '...');
+      console.error('Failed to parse GPT-4.1 response:', error);
+      console.log('Response preview:', content.substring(0, 300) + '...');
       
-      // Generate diverse fallback meal plan
-      console.log('Generating diverse fallback meal plan...');
+      // Enhanced fallback with better error reporting
+      console.log('Using enhanced fallback meal plan generation...');
       return this.generateDiverseFallbackMealPlan(duration);
     }
   }
@@ -284,7 +296,7 @@ export class OpenAIService {
       });
     }
     
-    console.log(`Generated diverse fallback meal plan with ${meals.length} unique meals`);
+    console.log(`Generated enhanced fallback meal plan with ${meals.length} unique meals`);
     return { meals };
   }
 
