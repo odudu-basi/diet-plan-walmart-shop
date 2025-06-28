@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/all-meal-plans" element={<AllMealPlans />} />
             <Route path="/meal-plan/:mealPlanId" element={<WeeklyMealPlan />} />
             <Route path="/shopping-list" element={<ShoppingList />} />
+            <Route path="/admin" element={<AdminPanel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
