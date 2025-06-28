@@ -11,23 +11,35 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 3000,
       backgroundColor: '#10b981',
       showSpinner: false,
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
-      splashImmersive: true
+      splashImmersive: true,
+      iosSpinnerStyle: 'small',
+      spinnerColor: '#ffffff'
     },
     StatusBar: {
-      style: 'DARK',
+      style: 'LIGHT',
       backgroundColor: '#10b981'
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
     }
   },
   ios: {
     contentInset: 'automatic',
     scrollEnabled: true,
-    backgroundColor: '#10b981'
+    backgroundColor: '#10b981',
+    allowsLinkPreview: false
+  },
+  android: {
+    backgroundColor: '#10b981',
+    allowMixedContent: true,
+    captureInput: true
   }
 };
 

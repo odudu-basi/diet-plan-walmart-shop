@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -84,13 +85,47 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-out': {
+					from: {
+						opacity: '1'
+					},
+					to: {
+						opacity: '0'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-out': 'fade-out 0.5s ease-out forwards'
+			},
+			animationDelay: {
+				'150': '150ms',
+				'300': '300ms',
+				'500': '500ms',
+				'1000': '1000ms',
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }) {
+			const newUtilities = {
+				'.animation-delay-150': {
+					'animation-delay': '150ms',
+				},
+				'.animation-delay-300': {
+					'animation-delay': '300ms',
+				},
+				'.animation-delay-500': {
+					'animation-delay': '500ms',
+				},
+				'.animation-delay-1000': {
+					'animation-delay': '1000ms',
+				},
+			}
+			addUtilities(newUtilities)
+		}
+	],
 } satisfies Config;
