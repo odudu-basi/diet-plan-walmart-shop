@@ -5,9 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Users, Flame, ChefHat, ShoppingCart, Image as ImageIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Clock, Users, Flame, ChefHat, ShoppingCart } from "lucide-react";
 
 interface MealDetailDialogProps {
   meal: any;
@@ -16,10 +14,6 @@ interface MealDetailDialogProps {
 }
 
 const MealDetailDialog = ({ meal, isOpen, onClose }: MealDetailDialogProps) => {
-  const { toast } = useToast();
-  const [mealImage, setMealImage] = useState<string | null>(null);
-  const [imageLoading, setImageLoading] = useState(false);
-
   const getMealTypeIcon = (mealType: string) => {
     switch (mealType.toLowerCase()) {
       case 'breakfast': return '🌅';
@@ -39,39 +33,6 @@ const MealDetailDialog = ({ meal, isOpen, onClose }: MealDetailDialogProps) => {
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  const generateMealImage = async () => {
-    if (!meal) return;
-
-    setImageLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-meal-image', {
-        body: {
-          mealName: meal.name,
-          mealType: meal.meal_type
-        }
-      });
-
-      if (error) throw error;
-
-      setMealImage(data.imageUrl);
-    } catch (error) {
-      console.error('Error generating meal image:', error);
-      toast({
-        title: "Image Generation Failed",
-        description: "Could not generate image for this meal.",
-        variant: "destructive",
-      });
-    } finally {
-      setImageLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen && meal && !mealImage) {
-      generateMealImage();
-    }
-  }, [isOpen, meal]);
 
   if (!meal) return null;
 
@@ -98,39 +59,8 @@ const MealDetailDialog = ({ meal, isOpen, onClose }: MealDetailDialogProps) => {
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Image and Basic Info */}
+          {/* Left Column - Basic Info */}
           <div className="space-y-4">
-            {/* Meal Image */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
-                  {imageLoading ? (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                      <span className="ml-2 text-gray-600">Generating image...</span>
-                    </div>
-                  ) : mealImage ? (
-                    <img 
-                      src={mealImage} 
-                      alt={meal.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <Button
-                        onClick={generateMealImage}
-                        variant="outline"
-                        className="flex items-center space-x-2"
-                      >
-                        <ImageIcon className="h-4 w-4" />
-                        <span>Generate Image</span>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Quick Info */}
             <Card>
               <CardHeader>
@@ -168,43 +98,6 @@ const MealDetailDialog = ({ meal, isOpen, onClose }: MealDetailDialogProps) => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Right Column - Recipe and Ingredients */}
-          <div className="space-y-4">
-            {/* Recipe Instructions */}
-            {meal.recipe_instructions && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <ChefHat className="h-5 w-5 mr-2 text-green-600" />
-                    Recipe Instructions
-                  </CardTitle>
-                  <CardDescription>
-                    Step-by-step guide to prepare this delicious meal
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    {meal.recipe_instructions.split('\n').map((step: string, index: number) => {
-                      const trimmedStep = step.trim();
-                      if (!trimmedStep) return null;
-                      
-                      return (
-                        <div key={index} className="mb-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
-                              {index + 1}
-                            </div>
-                            <p className="text-sm text-gray-700 leading-relaxed">{trimmedStep}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Ingredients */}
             {meal.meal_ingredients && meal.meal_ingredients.length > 0 && (
@@ -254,6 +147,43 @@ const MealDetailDialog = ({ meal, isOpen, onClose }: MealDetailDialogProps) => {
                       </div>
                     </>
                   )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Recipe */}
+          <div className="space-y-4">
+            {/* Recipe Instructions */}
+            {meal.recipe_instructions && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <ChefHat className="h-5 w-5 mr-2 text-green-600" />
+                    Recipe Instructions
+                  </CardTitle>
+                  <CardDescription>
+                    Step-by-step guide to prepare this delicious meal
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose prose-sm max-w-none">
+                    {meal.recipe_instructions.split('\n').map((step: string, index: number) => {
+                      const trimmedStep = step.trim();
+                      if (!trimmedStep) return null;
+                      
+                      return (
+                        <div key={index} className="mb-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                              {index + 1}
+                            </div>
+                            <p className="text-sm text-gray-700 leading-relaxed">{trimmedStep}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}
