@@ -88,7 +88,7 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
   };
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow">
+    <Card className="overflow-hidden hover-lift glass-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/70 backdrop-blur-sm">
       <ShoppingListHeader
         name={shoppingList.name}
         totalItems={totalItems}
@@ -101,11 +101,13 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
       />
 
       {isOpen && (
-        <CardContent className="pt-0">
-          <ShoppingListContent
-            items={shoppingList.shopping_list_items || []}
-            onItemToggle={handleItemToggle}
-          />
+        <CardContent className="pt-0 pb-6 px-6">
+          <div className="border-t border-gray-200/50 pt-4">
+            <ShoppingListContent
+              items={shoppingList.shopping_list_items || []}
+              onItemToggle={handleItemToggle}
+            />
+          </div>
         </CardContent>
       )}
     </Card>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Package, DollarSign } from "lucide-react";
 
 interface ShoppingListItemData {
   id: string;
@@ -26,10 +27,10 @@ const ShoppingListItem = ({ item, onToggle }: ShoppingListItemProps) => {
   
   return (
     <div 
-      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+      className={`group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 ${
         item.is_purchased 
-          ? 'bg-green-50 border-green-200' 
-          : 'bg-white border-gray-200 hover:bg-gray-50'
+          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm' 
+          : 'bg-white/80 border-gray-200 hover:bg-gray-50/80 hover:shadow-md hover:border-gray-300'
       }`}
     >
       <Checkbox
@@ -37,12 +38,23 @@ const ShoppingListItem = ({ item, onToggle }: ShoppingListItemProps) => {
         onCheckedChange={(checked) => 
           onToggle(item.id, checked as boolean)
         }
-        className="flex-shrink-0"
+        className="flex-shrink-0 w-5 h-5 rounded-md"
       />
+      
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+          item.is_purchased 
+            ? 'bg-green-100 text-green-600' 
+            : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+        } transition-colors`}>
+          <Package className="h-4 w-4" />
+        </div>
+      </div>
+
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-3 mb-1">
           <span 
-            className={`font-medium truncate ${
+            className={`font-medium truncate transition-all ${
               item.is_purchased 
                 ? 'line-through text-gray-500' 
                 : 'text-gray-900'
@@ -50,11 +62,19 @@ const ShoppingListItem = ({ item, onToggle }: ShoppingListItemProps) => {
           >
             {item.ingredient_name}
           </span>
-          <Badge variant="secondary" className="text-xs">
-            ${item.estimated_cost.toFixed(2)}
+          <Badge 
+            variant="secondary" 
+            className={`text-xs flex items-center gap-1 ${
+              item.is_purchased ? 'opacity-60' : ''
+            }`}
+          >
+            <DollarSign className="h-3 w-3" />
+            {item.estimated_cost.toFixed(2)}
           </Badge>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className={`text-sm transition-colors ${
+          item.is_purchased ? 'text-gray-400' : 'text-gray-600'
+        }`}>
           {walmartPackage || displayQuantity}
         </div>
       </div>
