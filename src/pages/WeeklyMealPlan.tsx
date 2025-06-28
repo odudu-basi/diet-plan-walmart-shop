@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Users, Flame, ChefHat, Calendar } from "lucide-react";
+import { ArrowLeft, Clock, Users, Flame, ChefHat, Calendar, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MealDetailDialog from "@/components/MealDetailDialog";
 
@@ -16,6 +16,8 @@ const WeeklyMealPlan = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedMeal, setSelectedMeal] = useState(null);
+  const [mealImages, setMealImages] = useState<{[key: string]: string}>({});
+  const [loadingImages, setLoadingImages] = useState<{[key: string]: boolean}>({});
 
   // Fetch meal plan details
   const { data: mealPlan, isLoading: mealPlanLoading } = useQuery({
@@ -89,6 +91,29 @@ const WeeklyMealPlan = () => {
     return acc;
   }, {}) || {};
 
+  const generateMealImage = async (meal: any) => {
+    if (mealImages[meal.id] || loadingImages[meal.id]) return;
+
+    setLoadingImages(prev => ({ ...prev, [meal.id]: true }));
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-meal-image', {
+        body: {
+          mealName: meal.name,
+          mealType: meal.meal_type
+        }
+      });
+
+      if (error) throw error;
+
+      setMealImages(prev => ({ ...prev, [meal.id]: data.imageUrl }));
+    } catch (error) {
+      console.error('Error generating meal image:', error);
+    } finally {
+      setLoadingImages(prev => ({ ...prev, [meal.id]: false }));
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
@@ -132,9 +157,8 @@ const WeeklyMealPlan = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-blue-50">
       {/* Compact Mobile-Friendly Header */}
       <div className="bg-white/90 backdrop-blur-sm border-b border-green-100 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          {/* Top Row - Back Button and Meal Count */}
-          <div className="flex items-center justify-between mb-3">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
             <Button 
               variant="ghost" 
               size="sm"
@@ -150,30 +174,28 @@ const WeeklyMealPlan = () => {
             </Badge>
           </div>
           
-          {/* Main Title */}
-          <div className="text-center mb-3">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1 line-clamp-2">
+          <div className="text-center">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
               {mealPlan.name}
             </h1>
             {mealPlan.description && (
-              <p className="text-sm md:text-base text-gray-600 line-clamp-2 max-w-2xl mx-auto">
+              <p className="text-sm text-gray-600 mb-3 max-w-xl mx-auto">
                 {mealPlan.description}
               </p>
             )}
-          </div>
-          
-          {/* Bottom Row - Date Range and Status */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs md:text-sm">
-            <div className="flex items-center space-x-1 bg-white/70 px-3 py-1 rounded-full border border-green-200">
-              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
-              <span className="text-gray-700 font-medium">
-                {new Date(mealPlan.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(mealPlan.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
             
-            <div className="flex items-center space-x-1 bg-white/70 px-3 py-1 rounded-full border border-green-200">
-              <Flame className="h-3 w-3 md:h-4 md:w-4 text-orange-500" />
-              <span className="text-gray-700 font-medium">Balanced</span>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+              <div className="flex items-center space-x-1 bg-white/70 px-2 py-1 rounded-full border border-green-200">
+                <Calendar className="h-3 w-3 text-green-600" />
+                <span className="text-gray-700 font-medium">
+                  {new Date(mealPlan.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(mealPlan.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-1 bg-white/70 px-2 py-1 rounded-full border border-green-200">
+                <Flame className="h-3 w-3 text-orange-500" />
+                <span className="text-gray-700 font-medium">Balanced</span>
+              </div>
             </div>
           </div>
         </div>
@@ -194,9 +216,38 @@ const WeeklyMealPlan = () => {
                   {mealsByDay[dayNumber].map((meal) => (
                     <Card 
                       key={meal.id} 
-                      className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-l-4 border-l-green-500"
+                      className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-l-4 border-l-green-500 overflow-hidden"
                       onClick={() => setSelectedMeal(meal)}
                     >
+                      {/* Meal Image */}
+                      <div className="relative h-32 bg-gray-100">
+                        {mealImages[meal.id] ? (
+                          <img 
+                            src={mealImages[meal.id]} 
+                            alt={meal.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : loadingImages[meal.id] ? (
+                          <div className="h-full flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                          </div>
+                        ) : (
+                          <div className="h-full flex items-center justify-center">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                generateMealImage(meal);
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              <ImageIcon className="h-5 w-5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <Badge className={`${getMealTypeColor(meal.meal_type)} border`}>
