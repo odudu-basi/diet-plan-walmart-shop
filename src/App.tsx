@@ -12,6 +12,7 @@ import MealPlanGenerator from "./pages/MealPlanGenerator";
 import AllMealPlans from "./pages/AllMealPlans";
 import WeeklyMealPlan from "./pages/WeeklyMealPlan";
 import ShoppingList from "./pages/ShoppingList";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
