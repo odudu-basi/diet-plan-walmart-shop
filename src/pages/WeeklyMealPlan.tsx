@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from "@/hooks/useAuth";
@@ -82,13 +81,26 @@ const WeeklyMealPlan = () => {
     }
   };
 
-  // Group meals by day
+  // Define meal type order for consistent sorting
+  const getMealTypeOrder = (mealType) => {
+    const order = { 'breakfast': 1, 'lunch': 2, 'dinner': 3, 'snack': 4 };
+    return order[mealType.toLowerCase()] || 5;
+  };
+
+  // Group meals by day and sort properly
   const mealsByDay = meals?.reduce((acc, meal) => {
     const day = meal.day_of_week;
     if (!acc[day]) acc[day] = [];
     acc[day].push(meal);
     return acc;
   }, {}) || {};
+
+  // Sort meals within each day by meal type order
+  Object.keys(mealsByDay).forEach(day => {
+    mealsByDay[day].sort((a, b) => {
+      return getMealTypeOrder(a.meal_type) - getMealTypeOrder(b.meal_type);
+    });
+  });
 
   if (!user) {
     return (
@@ -165,7 +177,7 @@ const WeeklyMealPlan = () => {
               
               <div className="flex items-center space-x-1 bg-white/70 px-2 py-1 rounded-full border border-green-200">
                 <Flame className="h-3 w-3 text-orange-500" />
-                <span className="text-gray-700 font-medium">Balanced</span>
+                <span className="text-gray-700 font-medium">American Comfort Food</span>
               </div>
             </div>
           </div>
