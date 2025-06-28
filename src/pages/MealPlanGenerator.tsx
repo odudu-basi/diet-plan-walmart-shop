@@ -77,19 +77,33 @@ const MealPlanGenerator = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/dashboard')}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <div className="flex items-center">
-            <Utensils className="h-8 w-8 text-green-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-800">AI Meal Plan Generator</h1>
+        {/* Improved Header */}
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="p-2 hover:bg-white/50 rounded-lg"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="ml-2 hidden sm:inline">Back to Dashboard</span>
+            </Button>
+          </div>
+          
+          <div className="text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start mb-3">
+              <div className="p-3 bg-green-100 rounded-xl mr-3">
+                <Utensils className="h-8 w-8 text-green-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 leading-tight">
+                  AI Meal Plan Generator
+                </h1>
+                <p className="text-gray-600 text-sm sm:text-base mt-1">
+                  Create personalized meal plans with AI
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
