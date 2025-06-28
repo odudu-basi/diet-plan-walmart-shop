@@ -19,7 +19,7 @@ export class OpenAIService {
       goal: profile.goal
     });
 
-    const prompt = this.buildWalmartMealPlanPrompt(profile, planDetails, dailyCalories, macroStrategy);
+    const prompt = this.buildCreativeWalmartMealPlanPrompt(profile, planDetails, dailyCalories, macroStrategy);
     
     try {
       console.log('Calling OpenAI API with GPT-4.1 for enhanced meal generation...');
@@ -34,15 +34,15 @@ export class OpenAIService {
           messages: [
             {
               role: 'system',
-              content: 'You are a nutrition expert and meal planning specialist with extensive knowledge of Walmart grocery availability and pricing. Create diverse, goal-specific meal plans using only ingredients commonly available at Walmart. Always return valid, properly formatted JSON.'
+              content: 'You are an innovative culinary AI with expertise in creating unique, personalized meal plans. You have deep knowledge of nutrition, international cuisines, cooking techniques, and Walmart ingredient availability. Your specialty is creating meal plans that are never repetitive and always surprising while meeting specific health goals. Each meal plan you create should feel like a culinary adventure.'
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.7, // Slightly lower for more consistent JSON formatting
-          max_tokens: 4500, // Increased for better handling of complex meal plans
+          temperature: 0.8, // Increased for more creativity
+          max_tokens: 4500,
         }),
       });
 
@@ -63,80 +63,145 @@ export class OpenAIService {
     }
   }
 
-  private buildWalmartMealPlanPrompt(profile: UserProfile, planDetails: PlanDetails, dailyCalories: number, macroStrategy: any): string {
+  private buildCreativeWalmartMealPlanPrompt(profile: UserProfile, planDetails: PlanDetails, dailyCalories: number, macroStrategy: any): string {
+    // Generate random elements to ensure variety
+    const timestamp = Date.now();
+    const creativitySeeds = this.getCreativitySeeds(timestamp);
+    
     const walmartIngredients = `
-    Focus on these Walmart-available ingredients:
-    - Proteins: chicken breast, ground beef, salmon, eggs, Greek yogurt, canned tuna
-    - Vegetables: broccoli, spinach, bell peppers, onions, carrots, tomatoes, frozen mixed vegetables
-    - Grains: brown rice, quinoa, whole wheat bread, oats, whole wheat pasta
-    - Dairy: milk, cheese, cottage cheese
-    - Pantry: olive oil, garlic, black beans, canned tomatoes, spices
+    Available Walmart ingredients (be creative with combinations):
+    PROTEINS: chicken breast, ground turkey, salmon, tilapia, shrimp, eggs, Greek yogurt, cottage cheese, canned tuna, black beans, chickpeas, lentils, tofu, ground beef (93/7)
+    VEGETABLES: spinach, kale, broccoli, cauliflower, bell peppers, zucchini, mushrooms, asparagus, Brussels sprouts, sweet potatoes, carrots, onions, garlic, cherry tomatoes, cucumber, avocado
+    GRAINS: quinoa, brown rice, wild rice, oats, whole wheat pasta, whole grain bread, barley, farro
+    PANTRY: olive oil, coconut oil, herbs, spices, nuts, seeds, vinegars, low-sodium broths
     `;
 
     return `
-    Create a ${planDetails.duration}-day personalized meal plan for a ${profile.age}-year-old with the following profile:
+    🎨 CREATIVE MEAL PLAN CHALLENGE 🎨
+    Create a COMPLETELY UNIQUE ${planDetails.duration}-day meal plan that has NEVER been made before!
     
-    PERSONAL DETAILS:
-    - Current weight: ${profile.weight} lbs
-    - Height: ${profile.height} inches  
-    - Goal: ${profile.goal}
-    - Activity level: ${profile.activityLevel}
-    - Daily calorie target: ${dailyCalories} calories
-    - Dietary restrictions: ${profile.dietaryRestrictions?.join(', ') || 'None'}
+    PROFILE CONTEXT:
+    - Age: ${profile.age}, Weight: ${profile.weight}lbs, Height: ${profile.height}"
+    - Goal: ${profile.goal} (${dailyCalories} calories/day)
+    - Activity: ${profile.activityLevel}
+    - Restrictions: ${profile.dietaryRestrictions?.join(', ') || 'None'}
     - Allergies: ${profile.allergies || 'None'}
-    - Budget range: $${profile.budgetRange || '50-100'} per week
+    - Budget: $${profile.budgetRange || '50-100'}/week
+    - Additional notes: ${planDetails.additionalNotes || 'None'}
     
-    NUTRITION STRATEGY:
+    NUTRITION TARGETS:
     ${macroStrategy.description}
-    - Protein: ${macroStrategy.protein}% of calories
-    - Carbs: ${macroStrategy.carbs}% of calories  
-    - Fat: ${macroStrategy.fat}% of calories
+    - Protein: ${macroStrategy.protein}% (${Math.round(dailyCalories * macroStrategy.protein / 100 / 4)}g)
+    - Carbs: ${macroStrategy.carbs}% (${Math.round(dailyCalories * macroStrategy.carbs / 100 / 4)}g)
+    - Fat: ${macroStrategy.fat}% (${Math.round(dailyCalories * macroStrategy.fat / 100 / 9)}g)
     
-    WALMART INGREDIENT REQUIREMENTS:
+    🌟 CREATIVITY REQUIREMENTS:
+    ${creativitySeeds.theme}
+    ${creativitySeeds.inspiration}
+    ${creativitySeeds.techniques}
+    ${creativitySeeds.flavors}
+    
+    🍳 MEAL VARIETY MANDATES:
+    - Each meal must be COMPLETELY different from any standard meal plan
+    - Use unexpected ingredient combinations that work together
+    - Include fusion cuisines (Korean-Mexican, Italian-Indian, etc.)
+    - Vary cooking methods: grilling, roasting, sautéing, steaming, slow-cooking, air-frying
+    - Include breakfast-for-dinner or lunch-for-breakfast creative swaps
+    - Use different texture combinations (crunchy + creamy, soft + chewy)
+    - Include both hot and cold meal options
+    - Create meals that tell a story or have a theme
+    
+    WALMART INGREDIENTS:
     ${walmartIngredients}
     
-    MEAL VARIETY REQUIREMENTS:
-    - NO meal should repeat during the plan
-    - Use different protein sources each day
-    - Vary cooking methods (grilled, baked, sautéed, etc.)
-    - Include different cuisines (American, Mediterranean, Asian-inspired, Mexican)
-    - Rotate vegetable combinations
-    - Mix different grain/starch options
-    
-    MEAL STRUCTURE (${Math.round(dailyCalories)} calories/day):
+    DAILY CALORIE BREAKDOWN:
     - Breakfast: ${Math.round(dailyCalories * 0.25)} calories
-    - Lunch: ${Math.round(dailyCalories * 0.35)} calories  
+    - Lunch: ${Math.round(dailyCalories * 0.35)} calories
     - Dinner: ${Math.round(dailyCalories * 0.40)} calories
     
-    Generate exactly ${planDetails.duration * 3} unique meals (breakfast, lunch, dinner for each day).
+    🎯 OUTPUT FORMAT:
+    Return ONLY valid JSON with exactly ${planDetails.duration * 3} unique meals:
     
-    CRITICAL: Return ONLY valid JSON without any markdown formatting, comments, or extra text. Use this exact format:
     {
       "meals": [
         {
-          "name": "Unique meal name",
-          "type": "breakfast",
-          "dayOfWeek": 0,
-          "instructions": "Detailed cooking instructions",
-          "prepTime": 15,
-          "cookTime": 20,
+          "name": "Creative, unique meal name that sounds exciting",
+          "type": "breakfast|lunch|dinner",
+          "dayOfWeek": 0-6,
+          "instructions": "Detailed, step-by-step cooking instructions with creative tips",
+          "prepTime": 10-30,
+          "cookTime": 15-45,
           "servings": 1,
-          "calories": 400,
+          "calories": target_calories,
           "ingredients": [
             {
-              "name": "ingredient name",
-              "quantity": 1.5,
-              "unit": "cup",
-              "category": "Produce",
-              "estimatedCost": 2.99
+              "name": "specific ingredient name",
+              "quantity": number,
+              "unit": "cup|oz|tbsp|etc",
+              "category": "Produce|Meat|Dairy|Pantry|Grains",
+              "estimatedCost": realistic_walmart_price
             }
           ]
         }
       ]
     }
     
-    Ensure all ingredients are commonly available at Walmart with realistic estimated costs.
+    Remember: This meal plan should be so creative and unique that if someone made it twice, they'd have completely different experiences each time!
     `;
+  }
+
+  private getCreativitySeeds(timestamp: number) {
+    const themes = [
+      "🌍 GLOBAL FUSION THEME: Blend flavors from 3+ different countries in unexpected ways",
+      "🌈 COLOR PALETTE THEME: Each day should feature meals in a different color family",
+      "🏛️ HISTORICAL CUISINE THEME: Draw inspiration from ancient civilizations and traditional cooking methods",
+      "🌿 GARDEN-TO-TABLE THEME: Focus on fresh, herb-forward meals with creative vegetable preparations",
+      "🔥 COOKING METHOD THEME: Each day features a different primary cooking technique",
+      "🌊 COASTAL THEME: Ocean-inspired meals with fresh, light flavors",
+      "🏔️ MOUNTAIN THEME: Hearty, warming meals perfect for cold weather",
+      "🌺 TROPICAL THEME: Bright, fresh flavors with exotic fruit and spice combinations"
+    ];
+    
+    const inspirations = [
+      "Draw inspiration from street food vendors around the world",
+      "Create meals inspired by different seasons and holidays",
+      "Think like a chef competing on a cooking show - be bold!",
+      "Imagine you're creating Instagram-worthy meals that taste amazing",
+      "Channel the creativity of food trucks and pop-up restaurants",
+      "Create meals that would surprise even experienced home cooks",
+      "Think of combining comfort food with gourmet techniques",
+      "Imagine you're a food blogger creating viral recipes"
+    ];
+    
+    const techniques = [
+      "Use marinades, rubs, and flavor layering techniques",
+      "Incorporate texture contrasts in every meal",
+      "Create signature sauces and dressings from scratch",
+      "Use creative plating and presentation ideas",
+      "Include both raw and cooked elements in meals",
+      "Experiment with temperature contrasts (hot/cold combinations)",
+      "Use herbs and spices in unexpected ways",
+      "Create meals with interactive elements (build-your-own style)"
+    ];
+    
+    const flavorProfiles = [
+      "Sweet & savory combinations", "Spicy with cooling elements", "Umami-rich with bright acids",
+      "Smoky with fresh herbs", "Creamy with crunchy textures", "Tangy with rich proteins",
+      "Aromatic spices with mild bases", "Complex layered seasonings"
+    ];
+    
+    // Use timestamp to create variety
+    const themeIndex = timestamp % themes.length;
+    const inspirationIndex = (timestamp * 3) % inspirations.length;
+    const techniqueIndex = (timestamp * 7) % techniques.length;
+    const flavorIndex = (timestamp * 11) % flavorProfiles.length;
+    
+    return {
+      theme: themes[themeIndex],
+      inspiration: `🎨 INSPIRATION: ${inspirations[inspirationIndex]}`,
+      techniques: `🔧 TECHNIQUE FOCUS: ${techniques[techniqueIndex]}`,
+      flavors: `👅 FLAVOR PROFILE: ${flavorProfiles[flavorIndex]}`
+    };
   }
 
   private calculateBMI(weight: number, height: number): number {
