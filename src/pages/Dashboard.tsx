@@ -108,21 +108,23 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen fresh-gradient">
-      {/* Modern Header with Logo */}
+      {/* Modern Header with New Logo */}
       <div className="bg-white/90 backdrop-blur-sm shadow-sm border-b border-emerald-100/30 sticky top-0 z-10">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="gradient-fresh p-2 rounded-xl shadow-md produce-shadow">
-                <ShoppingCart className="h-5 w-5 text-white" />
-              </div>
+              <img 
+                src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
+                alt="Grocery Genius Logo" 
+                className="w-10 h-10 rounded-xl shadow-md produce-shadow"
+              />
               <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full">
                 <Sparkles className="h-2 w-2 text-white" />
               </div>
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
-                FreshCart
+                Grocery Genius
               </h1>
               <p className="text-xs text-emerald-600">Welcome back, {displayName}</p>
             </div>
@@ -225,7 +227,7 @@ const Dashboard = () => {
                   <ChefHat className="h-8 w-8 text-emerald-500" />
                 </div>
                 <h3 className="text-sm font-semibold text-emerald-800 mb-2">No meal plans yet</h3>
-                <p className="text-xs text-emerald-600 mb-4">Create your first meal plan to get started with FreshCart</p>
+                <p className="text-xs text-emerald-600 mb-4">Create your first meal plan to get started with Grocery Genius</p>
                 <Button 
                   onClick={() => navigate('/meal-plan-generator')}
                   size="sm"
@@ -294,7 +296,7 @@ const Dashboard = () => {
                   <ShoppingCart className="h-8 w-8 text-teal-500" />
                 </div>
                 <h3 className="text-sm font-semibold text-teal-800 mb-2">No shopping lists yet</h3>
-                <p className="text-xs text-teal-600 mb-4">Create your first shopping list with FreshCart</p>
+                <p className="text-xs text-teal-600 mb-4">Create your first shopping list with Grocery Genius</p>
                 <Button 
                   onClick={() => navigate('/shopping-list')}
                   size="sm"

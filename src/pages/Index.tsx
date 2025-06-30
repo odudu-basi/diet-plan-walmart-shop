@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingCart, Sparkles, Heart, Zap } from "lucide-react";
+import { Sparkles, Heart, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
@@ -37,11 +37,13 @@ const Index = () => {
       {/* Modern Header with New Logo - Optimized for iPhone */}
       <div className="text-center px-4 pt-8 pb-6">
         <div className="flex justify-center items-center mb-6">
-          {/* Modern Logo Design with flipped cart */}
+          {/* New Logo Design using the uploaded image */}
           <div className="relative">
-            <div className="gradient-fresh p-3 rounded-2xl shadow-lg transform rotate-12 produce-shadow">
-              <ShoppingCart className="h-6 w-6 text-white scale-x-[-1]" />
-            </div>
+            <img 
+              src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
+              alt="Grocery Genius Logo" 
+              className="w-16 h-16 rounded-2xl shadow-lg produce-shadow"
+            />
             <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1.5 rounded-full shadow-lg">
               <Sparkles className="h-3 w-3 text-white" />
             </div>

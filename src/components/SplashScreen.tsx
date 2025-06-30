@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { ShoppingCart, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -37,11 +37,15 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
       {/* Main Content - Optimized for iPhone screens */}
       <div className="text-center z-10 px-4">
-        {/* Logo Container - Responsive with flipped cart */}
+        {/* Logo Container - Using new uploaded logo */}
         <div className="relative mb-6 sm:mb-8">
-          {/* Main Icon */}
-          <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-2xl sm:rounded-3xl shadow-2xl flex items-center justify-center transform animate-bounce">
-            <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-600 scale-x-[-1]" />
+          {/* Main Logo */}
+          <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 bg-white/10 rounded-3xl shadow-2xl flex items-center justify-center transform animate-bounce backdrop-blur-sm">
+            <img 
+              src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
+              alt="Grocery Genius Logo" 
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl"
+            />
           </div>
           
           {/* Sparkle Accent */}
@@ -50,7 +54,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           </div>
           
           {/* Glow Effect */}
-          <div className="absolute inset-0 w-20 h-20 sm:w-24 sm:h-24 bg-white/30 rounded-2xl sm:rounded-3xl blur-xl animate-pulse mx-auto"></div>
+          <div className="absolute inset-0 w-24 h-24 sm:w-28 sm:h-28 bg-white/20 rounded-3xl blur-xl animate-pulse mx-auto"></div>
         </div>
 
         {/* App Name - Responsive */}
