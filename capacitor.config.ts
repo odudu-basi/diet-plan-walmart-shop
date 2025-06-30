@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.5fa6528419a4404da981c7dddafce4b7',
-  appName: 'FreshCart',
+  appName: 'Grocery Genius',
   webDir: 'dist',
   server: {
     url: 'https://5fa65284-19a4-404d-a981-c7dddafce4b7.lovableproject.com?forceHideBadge=true',

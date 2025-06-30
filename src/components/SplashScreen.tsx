@@ -37,11 +37,11 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
       {/* Main Content - Optimized for iPhone screens */}
       <div className="text-center z-10 px-4">
-        {/* Logo Container - Responsive */}
+        {/* Logo Container - Responsive with flipped cart */}
         <div className="relative mb-6 sm:mb-8">
           {/* Main Icon */}
           <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-2xl sm:rounded-3xl shadow-2xl flex items-center justify-center transform animate-bounce">
-            <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-600" />
+            <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-600 scale-x-[-1]" />
           </div>
           
           {/* Sparkle Accent */}
@@ -55,7 +55,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
         {/* App Name - Responsive */}
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 sm:mb-3 tracking-tight">
-          FreshCart
+          Grocery Genius
         </h1>
         
         {/* Tagline - Responsive */}
