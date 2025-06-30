@@ -44,7 +44,8 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
             <img 
               src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
               alt="Grocery Genius Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl filter brightness-110"
+              style={{ backgroundColor: 'transparent' }}
             />
           </div>
           
