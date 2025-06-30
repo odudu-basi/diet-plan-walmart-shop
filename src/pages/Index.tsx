@@ -39,10 +39,9 @@ const Index = () => {
           {/* New Logo Design using the uploaded image */}
           <div className="relative">
             <img 
-              src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
+              src="/lovable-uploads/2116a70e-5932-453f-88a9-247932c67ed3.png" 
               alt="Grocery Genius Logo" 
-              className="w-16 h-16 object-contain drop-shadow-lg filter brightness-110"
-              style={{ backgroundColor: 'transparent' }}
+              className="w-16 h-16 object-contain drop-shadow-lg"
             />
             <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1.5 rounded-full shadow-lg">
               <Sparkles className="h-3 w-3 text-white" />

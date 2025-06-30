@@ -42,10 +42,9 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           {/* Main Logo */}
           <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center transform animate-bounce">
             <img 
-              src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
+              src="/lovable-uploads/2116a70e-5932-453f-88a9-247932c67ed3.png" 
               alt="Grocery Genius Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl filter brightness-110"
-              style={{ backgroundColor: 'transparent' }}
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
             />
           </div>
           
