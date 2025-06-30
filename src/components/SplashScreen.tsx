@@ -44,7 +44,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
             <img 
               src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
               alt="Grocery Genius Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl rounded-2xl"
             />
           </div>
           

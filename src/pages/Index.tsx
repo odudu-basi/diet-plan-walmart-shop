@@ -41,7 +41,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
               alt="Grocery Genius Logo" 
-              className="w-16 h-16 object-contain drop-shadow-lg"
+              className="w-16 h-16 object-contain drop-shadow-lg rounded-xl"
             />
             <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1.5 rounded-full shadow-lg">
               <Sparkles className="h-3 w-3 text-white" />
