@@ -3,7 +3,7 @@ import React from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, ChevronDown, ChevronUp, Calendar, ShoppingCart, CheckCircle2 } from "lucide-react";
+import { Trash2, Calendar, ShoppingCart, CheckCircle2, ChevronRight } from "lucide-react";
 
 interface ShoppingListHeaderProps {
   name: string;
@@ -11,8 +11,6 @@ interface ShoppingListHeaderProps {
   purchasedItems: number;
   progressPercentage: number;
   createdAt: string;
-  isOpen: boolean;
-  onToggle: () => void;
   onDelete: () => void;
 }
 
@@ -22,16 +20,13 @@ const ShoppingListHeader = ({
   purchasedItems, 
   progressPercentage, 
   createdAt, 
-  isOpen, 
-  onToggle,
   onDelete 
 }: ShoppingListHeaderProps) => {
   const isComplete = progressPercentage === 100;
 
   return (
     <CardHeader 
-      className="cursor-pointer hover:bg-white/50 transition-all duration-200 pb-4 relative"
-      onClick={onToggle}
+      className="hover:bg-white/50 transition-all duration-200 pb-4 relative"
     >
       {/* Progress Bar Background */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200/50 rounded-b-lg">
@@ -93,11 +88,7 @@ const ShoppingListHeader = ({
           </Button>
           
           <div className="p-1 text-gray-400 pointer-events-none">
-            {isOpen ? (
-              <ChevronUp className="h-5 w-5 transition-transform" />
-            ) : (
-              <ChevronDown className="h-5 w-5 transition-transform" />
-            )}
+            <ChevronRight className="h-5 w-5 transition-transform" />
           </div>
         </div>
       </div>

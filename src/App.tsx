@@ -14,6 +14,7 @@ import MealPlanGenerator from "./pages/MealPlanGenerator";
 import AllMealPlans from "./pages/AllMealPlans";
 import WeeklyMealPlan from "./pages/WeeklyMealPlan";
 import ShoppingList from "./pages/ShoppingList";
+import ShoppingListDetails from "./pages/ShoppingListDetails";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => {
               <Route path="/all-meal-plans" element={<AllMealPlans />} />
               <Route path="/meal-plan/:mealPlanId" element={<WeeklyMealPlan />} />
               <Route path="/shopping-list" element={<ShoppingList />} />
+              <Route path="/shopping-list/:id" element={<ShoppingListDetails />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
