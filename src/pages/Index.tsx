@@ -39,7 +39,7 @@ const Index = () => {
           {/* New Logo Design using the uploaded image */}
           <div className="relative">
             <img 
-              src="/lovable-uploads/2116a70e-5932-453f-88a9-247932c67ed3.png" 
+              src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
               alt="Grocery Genius Logo" 
               className="w-16 h-16 object-contain drop-shadow-lg"
             />

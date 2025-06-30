@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,7 +115,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img 
-                src="/lovable-uploads/2116a70e-5932-453f-88a9-247932c67ed3.png" 
+                src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
                 alt="Grocery Genius Logo" 
                 className="w-10 h-10 object-contain drop-shadow-md"
               />
