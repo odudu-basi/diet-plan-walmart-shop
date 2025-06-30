@@ -40,11 +40,11 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
         {/* Logo Container - Using new uploaded logo */}
         <div className="relative mb-6 sm:mb-8">
           {/* Main Logo */}
-          <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 bg-white/10 rounded-3xl shadow-2xl flex items-center justify-center transform animate-bounce backdrop-blur-sm">
+          <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center transform animate-bounce">
             <img 
               src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
               alt="Grocery Genius Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
             />
           </div>
           
@@ -54,7 +54,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           </div>
           
           {/* Glow Effect */}
-          <div className="absolute inset-0 w-24 h-24 sm:w-28 sm:h-28 bg-white/20 rounded-3xl blur-xl animate-pulse mx-auto"></div>
+          <div className="absolute inset-0 w-24 h-24 sm:w-28 sm:h-28 bg-emerald-300/30 rounded-full blur-xl animate-pulse mx-auto"></div>
         </div>
 
         {/* App Name - Responsive */}

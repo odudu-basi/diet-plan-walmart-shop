@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,7 +117,7 @@ const Dashboard = () => {
               <img 
                 src="/lovable-uploads/804399f0-9cfd-42fa-b9d7-d2d9d3008648.png" 
                 alt="Grocery Genius Logo" 
-                className="w-10 h-10 rounded-xl shadow-md produce-shadow"
+                className="w-10 h-10 object-contain drop-shadow-md"
               />
               <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full">
                 <Sparkles className="h-2 w-2 text-white" />
