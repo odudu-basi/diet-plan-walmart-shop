@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,7 +117,11 @@ const Dashboard = () => {
               <img 
                 src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
                 alt="Preppi Logo" 
-                className="w-12 h-12 object-contain rounded-2xl shadow-lg"
+                className="w-12 h-12 object-contain rounded-3xl shadow-lg border-2 border-white/80"
+                style={{
+                  filter: 'drop-shadow(0 4px 8px rgba(16, 185, 129, 0.15))',
+                  borderRadius: '24px'
+                }}
               />
               <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full shadow-md">
                 <Sparkles className="h-2 w-2 text-white" />
