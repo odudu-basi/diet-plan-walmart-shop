@@ -114,7 +114,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img 
-                src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
+                src="/lovable-uploads/2a24e728-e35f-42db-ac93-de9d7dba9d80.png" 
                 alt="CartCrafter Logo" 
                 className="w-10 h-10 object-contain drop-shadow-md rounded-lg"
               />

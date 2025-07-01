@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +39,7 @@ const Index = () => {
           {/* New Logo Design using the uploaded image */}
           <div className="relative">
             <img 
-              src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
+              src="/lovable-uploads/2a24e728-e35f-42db-ac93-de9d7dba9d80.png" 
               alt="CartCrafter Logo" 
               className="w-16 h-16 object-contain drop-shadow-lg rounded-xl"
             />
