@@ -113,13 +113,11 @@ const Dashboard = () => {
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-2 rounded-2xl shadow-lg border border-emerald-100/50">
-                <img 
-                  src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
-                  alt="Preppi Logo" 
-                  className="w-8 h-8 object-contain rounded-xl"
-                />
-              </div>
+              <img 
+                src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
+                alt="Preppi Logo" 
+                className="w-12 h-12 object-contain rounded-2xl shadow-lg"
+              />
               <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full shadow-md">
                 <Sparkles className="h-2 w-2 text-white" />
               </div>
