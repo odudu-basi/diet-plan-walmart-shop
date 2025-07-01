@@ -46,32 +46,42 @@ const AllMealPlans = () => {
 
   return (
     <div className="min-h-screen fresh-gradient">
-      {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm shadow-sm border-b border-emerald-100/30 sticky top-0 z-10">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/dashboard')}
-              className="hover:bg-emerald-50"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+      {/* Improved Header for iPhone compatibility */}
+      <div className="bg-white/90 backdrop-blur-sm shadow-sm border-b border-emerald-100/30 sticky top-0 z-10 pt-safe">
+        {/* Back Button Row */}
+        <div className="px-4 pt-4 pb-2">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/dashboard')}
+            className="hover:bg-emerald-50 p-2 h-auto"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span className="text-sm font-medium">Back to Dashboard</span>
+          </Button>
+        </div>
+        
+        {/* Title and Create Button Row */}
+        <div className="px-4 pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent leading-tight">
                 All Meal Plans
               </h1>
-              <p className="text-xs text-emerald-600">Manage your meal planning journey</p>
+              <p className="text-sm text-emerald-600 mt-1 leading-relaxed">
+                Manage your meal planning journey
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <Button 
+                onClick={() => navigate('/meal-plan-generator')}
+                className="gradient-fresh hover:from-emerald-600 hover:to-green-700 px-4 py-2 h-auto text-sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                <span className="hidden xs:inline">Create New Plan</span>
+                <span className="xs:hidden">Create</span>
+              </Button>
             </div>
           </div>
-          <Button 
-            onClick={() => navigate('/meal-plan-generator')}
-            className="gradient-fresh hover:from-emerald-600 hover:to-green-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Plan
-          </Button>
         </div>
       </div>
 
