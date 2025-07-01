@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +20,7 @@ const Index = () => {
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
             <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-green-400 border-r-transparent animate-spin animation-delay-150 mx-auto"></div>
           </div>
-          <p className="text-emerald-700 font-medium">Loading Grocery Genius...</p>
+          <p className="text-emerald-700 font-medium">Loading CartCrafter...</p>
         </div>
       </div>
     );
@@ -40,7 +41,7 @@ const Index = () => {
           <div className="relative">
             <img 
               src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
-              alt="Grocery Genius Logo" 
+              alt="CartCrafter Logo" 
               className="w-16 h-16 object-contain drop-shadow-lg rounded-xl"
             />
             <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1.5 rounded-full shadow-lg">
@@ -51,13 +52,13 @@ const Index = () => {
         
         <div className="space-y-3">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">
-            Grocery Genius
+            CartCrafter
           </h1>
           <p className="text-lg sm:text-xl text-emerald-800 font-medium max-w-md mx-auto px-4">
             Stop wandering grocery aisles confused
           </p>
           <p className="text-sm sm:text-base text-emerald-700 max-w-lg mx-auto leading-relaxed px-4">
-            Tired of staring at shelves wondering what to buy? Grocery Genius ends grocery confusion with AI-powered meal plans
+            Tired of staring at shelves wondering what to buy? CartCrafter ends grocery confusion with AI-powered meal plans
           </p>
         </div>
 
@@ -78,7 +79,7 @@ const Index = () => {
       <div className="flex-1 flex items-start justify-center px-4 pb-8">
         <Card className="w-full max-w-sm mx-auto shadow-2xl border-0 glass-card produce-shadow">
           <CardHeader className="text-center pb-4 bg-gradient-to-r from-emerald-50/50 to-green-50/50 rounded-t-lg px-4 pt-4">
-            <CardTitle className="text-xl font-bold text-emerald-900">Welcome to Grocery Genius</CardTitle>
+            <CardTitle className="text-xl font-bold text-emerald-900">Welcome to CartCrafter</CardTitle>
             <CardDescription className="text-sm text-emerald-700">
               Start your smart shopping journey
             </CardDescription>

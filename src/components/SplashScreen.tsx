@@ -43,7 +43,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center transform animate-bounce">
             <img 
               src="/lovable-uploads/078fac32-62bb-4101-8a16-d8ec682d6d43.png" 
-              alt="Grocery Genius Logo" 
+              alt="CartCrafter Logo" 
               className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl rounded-2xl"
             />
           </div>
@@ -59,7 +59,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
         {/* App Name - Responsive */}
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 sm:mb-3 tracking-tight">
-          Grocery Genius
+          CartCrafter
         </h1>
         
         {/* Tagline - Responsive */}
