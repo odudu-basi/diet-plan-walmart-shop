@@ -40,9 +40,9 @@ const Index = () => {
           {/* New Logo Design using the uploaded image */}
           <div className="relative">
             <img 
-              src="/lovable-uploads/2a24e728-e35f-42db-ac93-de9d7dba9d80.png" 
+              src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
               alt="Preppi Logo" 
-              className="w-16 h-16 object-contain drop-shadow-lg rounded-xl"
+              className="w-16 h-16 object-contain drop-shadow-lg"
             />
             <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1.5 rounded-full shadow-lg">
               <Sparkles className="h-3 w-3 text-white" />

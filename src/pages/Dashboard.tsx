@@ -108,35 +108,40 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen fresh-gradient">
-      {/* Modern Header with New Logo */}
-      <div className="bg-white/90 backdrop-blur-sm shadow-sm border-b border-emerald-100/30 sticky top-0 z-10">
+      {/* Premium Header with New Logo */}
+      <div className="bg-white/95 backdrop-blur-lg shadow-xl border-b border-emerald-100/30 sticky top-0 z-10">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="relative">
-              <img 
-                src="/lovable-uploads/2a24e728-e35f-42db-ac93-de9d7dba9d80.png" 
-                alt="Preppi Logo" 
-                className="w-10 h-10 object-contain drop-shadow-md rounded-lg"
-              />
-              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full">
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-2 rounded-2xl shadow-lg border border-emerald-100/50">
+                <img 
+                  src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
+                  alt="Preppi Logo" 
+                  className="w-8 h-8 object-contain"
+                />
+              </div>
+              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full shadow-md">
                 <Sparkles className="h-2 w-2 text-white" />
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
-                Preppi
+              <h1 className="text-2xl font-black bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight">
+                PREPPI
               </h1>
-              <p className="text-xs text-emerald-600">Welcome back, {displayName}</p>
+              <p className="text-xs text-emerald-600 font-medium -mt-1">Premium Shopping Intelligence</p>
             </div>
           </div>
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => navigate('/profile-setup')}
-            className="rounded-full hover:bg-emerald-50"
+            className="rounded-full hover:bg-emerald-50 border border-emerald-100/50"
           >
             <User className="h-5 w-5 text-emerald-600" />
           </Button>
+        </div>
+        <div className="px-4 pb-3">
+          <p className="text-sm text-emerald-700 font-medium">Welcome back, {displayName}</p>
         </div>
       </div>
 
