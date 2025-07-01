@@ -43,7 +43,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center transform animate-bounce">
             <img 
               src="/lovable-uploads/2a24e728-e35f-42db-ac93-de9d7dba9d80.png" 
-              alt="CartCrafter Logo" 
+              alt="Preppi Logo" 
               className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl rounded-2xl"
             />
           </div>
@@ -59,7 +59,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
         {/* App Name - Responsive */}
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 sm:mb-3 tracking-tight">
-          CartCrafter
+          Preppi
         </h1>
         
         {/* Tagline - Responsive */}

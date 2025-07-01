@@ -115,7 +115,7 @@ const Dashboard = () => {
             <div className="relative">
               <img 
                 src="/lovable-uploads/2a24e728-e35f-42db-ac93-de9d7dba9d80.png" 
-                alt="CartCrafter Logo" 
+                alt="Preppi Logo" 
                 className="w-10 h-10 object-contain drop-shadow-md rounded-lg"
               />
               <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full">
@@ -124,7 +124,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
-                CartCrafter
+                Preppi
               </h1>
               <p className="text-xs text-emerald-600">Welcome back, {displayName}</p>
             </div>
