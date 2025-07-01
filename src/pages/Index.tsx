@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,7 +41,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
               alt="Preppi Logo" 
-              className="w-16 h-16 object-contain drop-shadow-lg"
+              className="w-16 h-16 object-contain drop-shadow-lg rounded-2xl"
             />
             <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1.5 rounded-full shadow-lg">
               <Sparkles className="h-3 w-3 text-white" />

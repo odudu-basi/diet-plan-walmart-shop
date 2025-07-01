@@ -44,7 +44,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
             <img 
               src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
               alt="Preppi Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl rounded-2xl"
             />
           </div>
           

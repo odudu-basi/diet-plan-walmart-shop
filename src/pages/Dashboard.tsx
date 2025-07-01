@@ -117,7 +117,7 @@ const Dashboard = () => {
                 <img 
                   src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
                   alt="Preppi Logo" 
-                  className="w-8 h-8 object-contain"
+                  className="w-8 h-8 object-contain rounded-xl"
                 />
               </div>
               <div className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-400 to-yellow-400 p-1 rounded-full shadow-md">
