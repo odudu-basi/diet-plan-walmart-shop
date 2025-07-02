@@ -21,7 +21,6 @@ interface ShoppingListItemProps {
 }
 
 const ShoppingListItem = ({ item, onToggle }: ShoppingListItemProps) => {
-  const displayQuantity = item.unit === 'package' ? item.quantity : `${item.quantity} ${item.unit}`;
   const walmartPackage = item.notes || '';
   
   return (
@@ -62,11 +61,13 @@ const ShoppingListItem = ({ item, onToggle }: ShoppingListItemProps) => {
             {item.ingredient_name}
           </span>
         </div>
-        <div className={`text-sm transition-colors ${
-          item.is_purchased ? 'text-gray-400' : 'text-gray-600'
-        }`}>
-          {walmartPackage || displayQuantity}
-        </div>
+        {walmartPackage && (
+          <div className={`text-sm transition-colors ${
+            item.is_purchased ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            {walmartPackage}
+          </div>
+        )}
       </div>
     </div>
   );
