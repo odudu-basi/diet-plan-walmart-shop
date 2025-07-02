@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +40,7 @@ const Index = () => {
           {/* New Logo Design using the uploaded image */}
           <div className="relative">
             <img 
-              src="/lovable-uploads/f403a5c9-45ee-4e90-aed7-da378f97f09d.png" 
+              src="/lovable-uploads/31904f9b-4920-4bbd-b421-bc9f92a32bd5.png" 
               alt="Preppi Logo" 
               className="w-16 h-16 object-contain drop-shadow-lg rounded-2xl"
             />
@@ -125,3 +126,4 @@ const Index = () => {
 };
 
 export default Index;
+
