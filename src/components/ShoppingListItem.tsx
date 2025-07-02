@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Package, DollarSign } from "lucide-react";
+import { Package } from "lucide-react";
 
 interface ShoppingListItemData {
   id: string;
@@ -62,15 +61,6 @@ const ShoppingListItem = ({ item, onToggle }: ShoppingListItemProps) => {
           >
             {item.ingredient_name}
           </span>
-          <Badge 
-            variant="secondary" 
-            className={`text-xs flex items-center gap-1 ${
-              item.is_purchased ? 'opacity-60' : ''
-            }`}
-          >
-            <DollarSign className="h-3 w-3" />
-            {item.estimated_cost.toFixed(2)}
-          </Badge>
         </div>
         <div className={`text-sm transition-colors ${
           item.is_purchased ? 'text-gray-400' : 'text-gray-600'

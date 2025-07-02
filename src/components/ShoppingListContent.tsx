@@ -66,7 +66,6 @@ const ShoppingListContent = ({ items, onItemToggle }: ShoppingListContentProps) 
 
       {/* Grouped Items by Category */}
       {Object.entries(groupedItems).map(([category, categoryItems]) => {
-        const categoryTotal = categoryItems.reduce((sum, item) => sum + item.estimated_cost, 0);
         const categoryPurchased = categoryItems.filter(item => item.is_purchased).length;
         const categoryProgress = Math.round((categoryPurchased / categoryItems.length) * 100);
         
@@ -81,17 +80,12 @@ const ShoppingListContent = ({ items, onItemToggle }: ShoppingListContentProps) 
                   {categoryPurchased}/{categoryItems.length}
                 </Badge>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge 
-                  variant={categoryProgress === 100 ? "default" : "secondary"} 
-                  className="text-xs"
-                >
-                  {categoryProgress}%
-                </Badge>
-                <Badge variant="outline" className="text-xs font-medium">
-                  ${categoryTotal.toFixed(2)}
-                </Badge>
-              </div>
+              <Badge 
+                variant={categoryProgress === 100 ? "default" : "secondary"} 
+                className="text-xs"
+              >
+                {categoryProgress}%
+              </Badge>
             </div>
             
             <div className="space-y-2 ml-2">
