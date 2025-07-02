@@ -177,7 +177,7 @@ export const useMealPlanGeneration = (profile: any) => {
       const longBreakfasts = breakfastMeals.filter(m => (m.prepTime + m.cookTime) > 20);
       
       console.log(`Meal diversity check: ${uniqueMeals.size} unique meals out of ${mealNames.length} total meals`);
-      console.log(`Breakfast compliance: ${breakfastMeals.length - longBreakasts.length}/${breakfastMeals.length} breakfasts are 20 minutes or less`);
+      console.log(`Breakfast compliance: ${breakfastMeals.length - longBreakfasts.length}/${breakfastMeals.length} breakfasts are 20 minutes or less`);
 
       // Step 2: Create meal plan record
       setProgress(40);
