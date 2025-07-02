@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -131,7 +129,7 @@ const Dashboard = () => {
               <h1 className="text-2xl font-black bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight">
                 PREPPI
               </h1>
-              <p className="text-xs text-emerald-600 font-medium -mt-1">Premium Shopping Intelligence</p>
+              <p className="text-xs text-emerald-600 font-medium -mt-1">Grocery Meal Planning made Simple</p>
             </div>
           </div>
           <Button 
@@ -334,4 +332,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
