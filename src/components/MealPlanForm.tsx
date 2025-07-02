@@ -40,6 +40,7 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
   });
 
   const cuisineOptions = [
+    { id: 'american', label: 'American' },
     { id: 'italian', label: 'Italian' },
     { id: 'mexican', label: 'Mexican' },
     { id: 'japanese', label: 'Japanese' },
