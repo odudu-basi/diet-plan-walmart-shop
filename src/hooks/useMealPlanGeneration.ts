@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -149,9 +150,15 @@ export const useMealPlanGeneration = (profile: any) => {
         maxCookingTime: formData.maxCookingTime
       };
 
+      // Determine meal creation step message based on cuisine selection
+      const hasCuisineSelection = formData.culturalCuisines.length > 0;
+      const cuisineStepMessage = hasCuisineSelection 
+        ? `Creating diverse meals featuring ${formData.culturalCuisines.filter(c => c !== 'other').join(', ')}${formData.culturalCuisines.includes('other') && formData.otherCuisine ? `, ${formData.otherCuisine}` : ''} cuisines with dietary restrictions...`
+        : 'Creating diverse international meals with dietary restrictions...';
+
       // Step 1: Generate meal plan via edge function
       setProgress(20);
-      setCurrentStep('Creating diverse, culturally-inspired meals with dietary restrictions...');
+      setCurrentStep(cuisineStepMessage);
       
       console.log('Calling enhanced meal plan generation with cultural preferences and dietary restrictions...');
       const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
@@ -175,7 +182,7 @@ export const useMealPlanGeneration = (profile: any) => {
       }
 
       const mealPlan: MealPlan = mealPlanData;
-      console.log('Received culturally-diverse meal plan with', mealPlan.meals.length, 'meals');
+      console.log('Received meal plan with', mealPlan.meals.length, 'meals');
 
       // Validate meal diversity and cultural alignment
       const mealNames = mealPlan.meals.map(m => m.name.toLowerCase());
@@ -289,26 +296,39 @@ export const useMealPlanGeneration = (profile: any) => {
       }
 
       setProgress(100);
-      setCurrentStep('Your culturally-inspired meal plan is ready!');
+      const finalStepMessage = hasCuisineSelection 
+        ? `Your ${formData.culturalCuisines.filter(c => c !== 'other').join(', ')}${formData.culturalCuisines.includes('other') && formData.otherCuisine ? `, ${formData.otherCuisine}` : ''} meal plan is ready!`
+        : 'Your international variety meal plan is ready!';
+      setCurrentStep(finalStepMessage);
+
+      const successDescription = hasCuisineSelection
+        ? `Your personalized ${planDetails.duration}-day meal plan featuring ${formData.culturalCuisines.filter(c => c !== 'other').join(', ')}${formData.culturalCuisines.includes('other') && formData.otherCuisine ? `, ${formData.otherCuisine}` : ''} cuisines with dietary restrictions has been generated!`
+        : `Your personalized ${planDetails.duration}-day meal plan with international variety and dietary restrictions has been generated!`;
 
       toast({
         title: "Success!",
-        description: `Your personalized ${planDetails.duration}-day meal plan featuring ${formData.culturalCuisines.join(', ')} cuisines with dietary restrictions has been generated!`,
+        description: successDescription,
       });
 
       // Navigate to the meal plan page immediately
       navigate(`/meal-plan/${savedMealPlan.id}`);
 
+      const cuisineStats = hasCuisineSelection 
+        ? formData.culturalCuisines.filter(c => c !== 'other').concat(formData.culturalCuisines.includes('other') && formData.otherCuisine ? [formData.otherCuisine] : [])
+        : ['International Variety'];
+
       return {
         success: true,
         mealPlanId: savedMealPlan.id,
-        message: `Culturally-diverse meal plan generated with ${uniqueMeals.size} unique meals and dietary restrictions!`,
+        message: hasCuisineSelection 
+          ? `Meal plan generated with ${uniqueMeals.size} unique meals featuring your selected cuisines and dietary restrictions!`
+          : `Meal plan generated with ${uniqueMeals.size} unique meals featuring international variety and dietary restrictions!`,
         stats: {
           totalMeals: mealPlan.meals.length,
           uniqueMeals: uniqueMeals.size,
           targetCalories,
           goal: userProfile.goal,
-          cuisines: formData.culturalCuisines,
+          cuisines: cuisineStats,
           dietaryRestrictions: userProfile.dietaryRestrictions,
           maxCookingTime: formData.maxCookingTime
         }

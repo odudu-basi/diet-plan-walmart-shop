@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart, Globe, ChefHat, Shield } from "lucide-react";
+import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart, Globe, ChefHat, Shield, Info } from "lucide-react";
 
 export interface MealPlanFormData {
   planName: string;
@@ -134,7 +133,12 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
               <Globe className="h-5 w-5 text-emerald-600" />
               <Label className="text-base font-semibold">Cultural Cuisines</Label>
             </div>
-            <p className="text-sm text-gray-600">Select the cuisines you'd like to include in your meal plan</p>
+            <div className="flex items-start space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Select cuisines you'd like to include, or leave empty for a diverse international variety
+              </p>
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {cuisineOptions.map((cuisine) => (
