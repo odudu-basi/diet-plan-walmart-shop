@@ -19,6 +19,9 @@ export interface PlanDetails {
   duration: number;
   targetCalories?: number;
   createShoppingList: boolean;
+  culturalCuisines?: string[];
+  otherCuisine?: string;
+  maxCookingTime?: string;
 }
 
 export interface Meal {
@@ -48,6 +51,9 @@ export interface MealPlanFormData {
   duration: string;
   targetCalories: string;
   additionalNotes: string;
+  culturalCuisines: string[];
+  otherCuisine: string;
+  maxCookingTime: string;
 }
 
 export const useMealPlanGeneration = (profile: any) => {
@@ -124,18 +130,23 @@ export const useMealPlanGeneration = (profile: any) => {
 
       console.log('Personalized calorie target:', targetCalories);
       console.log('User profile for meal generation:', userProfile);
+      console.log('Cultural cuisines selected:', formData.culturalCuisines);
+      console.log('Max cooking time:', formData.maxCookingTime);
 
       const planDetails: PlanDetails = {
         duration: parseInt(formData.duration),
         targetCalories,
-        createShoppingList: true
+        createShoppingList: true,
+        culturalCuisines: formData.culturalCuisines,
+        otherCuisine: formData.otherCuisine,
+        maxCookingTime: formData.maxCookingTime
       };
 
       // Step 1: Generate meal plan via edge function
       setProgress(20);
-      setCurrentStep('Creating diverse, goal-specific meals...');
+      setCurrentStep('Creating diverse, culturally-inspired meals...');
       
-      console.log('Calling enhanced meal plan generation function...');
+      console.log('Calling enhanced meal plan generation with cultural preferences...');
       const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
         body: { 
           profile: userProfile, 
@@ -157,12 +168,16 @@ export const useMealPlanGeneration = (profile: any) => {
       }
 
       const mealPlan: MealPlan = mealPlanData;
-      console.log('Received personalized meal plan with', mealPlan.meals.length, 'diverse meals');
+      console.log('Received culturally-diverse meal plan with', mealPlan.meals.length, 'meals');
 
-      // Validate meal diversity
+      // Validate meal diversity and cultural alignment
       const mealNames = mealPlan.meals.map(m => m.name.toLowerCase());
       const uniqueMeals = new Set(mealNames);
+      const breakfastMeals = mealPlan.meals.filter(m => m.type === 'breakfast');
+      const longBreakfasts = breakfastMeals.filter(m => (m.prepTime + m.cookTime) > 20);
+      
       console.log(`Meal diversity check: ${uniqueMeals.size} unique meals out of ${mealNames.length} total meals`);
+      console.log(`Breakfast compliance: ${breakfastMeals.length - longBreakasts.length}/${breakfastMeals.length} breakfasts are 20 minutes or less`);
 
       // Step 2: Create meal plan record
       setProgress(40);
@@ -267,11 +282,11 @@ export const useMealPlanGeneration = (profile: any) => {
       }
 
       setProgress(100);
-      setCurrentStep('Your personalized meal plan is ready!');
+      setCurrentStep('Your culturally-inspired meal plan is ready!');
 
       toast({
         title: "Success!",
-        description: `Your personalized ${planDetails.duration}-day meal plan with ${uniqueMeals.size} unique meals has been generated!`,
+        description: `Your personalized ${planDetails.duration}-day meal plan featuring ${formData.culturalCuisines.join(', ')} cuisines has been generated!`,
       });
 
       // Navigate to the meal plan page immediately
@@ -280,12 +295,14 @@ export const useMealPlanGeneration = (profile: any) => {
       return {
         success: true,
         mealPlanId: savedMealPlan.id,
-        message: `Personalized meal plan generated with ${uniqueMeals.size} unique meals!`,
+        message: `Culturally-diverse meal plan generated with ${uniqueMeals.size} unique meals!`,
         stats: {
           totalMeals: mealPlan.meals.length,
           uniqueMeals: uniqueMeals.size,
           targetCalories,
-          goal: userProfile.goal
+          goal: userProfile.goal,
+          cuisines: formData.culturalCuisines,
+          maxCookingTime: formData.maxCookingTime
         }
       };
 

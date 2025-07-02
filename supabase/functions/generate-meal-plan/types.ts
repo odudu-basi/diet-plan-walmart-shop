@@ -15,6 +15,9 @@ export interface PlanDetails {
   planName: string;
   targetCalories?: number;
   additionalNotes?: string;
+  culturalCuisines?: string[];
+  otherCuisine?: string;
+  maxCookingTime?: string;
 }
 
 export interface MealIngredient {
