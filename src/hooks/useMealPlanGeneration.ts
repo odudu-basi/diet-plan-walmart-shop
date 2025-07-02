@@ -54,6 +54,8 @@ export interface MealPlanFormData {
   culturalCuisines: string[];
   otherCuisine: string;
   maxCookingTime: string;
+  dietaryRestrictions: string[];
+  otherDietaryRestriction: string;
 }
 
 export const useMealPlanGeneration = (profile: any) => {
@@ -85,7 +87,11 @@ export const useMealPlanGeneration = (profile: any) => {
         height: profile.height || 66,
         goal: profile.goal || 'maintain-weight',
         activityLevel: profile.activity_level || 'moderate',
-        dietaryRestrictions: profile.dietary_restrictions || [],
+        dietaryRestrictions: [
+          ...(profile.dietary_restrictions || []),
+          ...formData.dietaryRestrictions,
+          ...(formData.dietaryRestrictions.includes('other') && formData.otherDietaryRestriction ? [formData.otherDietaryRestriction] : [])
+        ],
         allergies: profile.allergies || 'None',
         budgetRange: profile.budget_range || '50-100'
       };
@@ -131,6 +137,7 @@ export const useMealPlanGeneration = (profile: any) => {
       console.log('Personalized calorie target:', targetCalories);
       console.log('User profile for meal generation:', userProfile);
       console.log('Cultural cuisines selected:', formData.culturalCuisines);
+      console.log('Dietary restrictions:', userProfile.dietaryRestrictions);
       console.log('Max cooking time:', formData.maxCookingTime);
 
       const planDetails: PlanDetails = {
@@ -144,9 +151,9 @@ export const useMealPlanGeneration = (profile: any) => {
 
       // Step 1: Generate meal plan via edge function
       setProgress(20);
-      setCurrentStep('Creating diverse, culturally-inspired meals...');
+      setCurrentStep('Creating diverse, culturally-inspired meals with dietary restrictions...');
       
-      console.log('Calling enhanced meal plan generation with cultural preferences...');
+      console.log('Calling enhanced meal plan generation with cultural preferences and dietary restrictions...');
       const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
         body: { 
           profile: userProfile, 
@@ -286,7 +293,7 @@ export const useMealPlanGeneration = (profile: any) => {
 
       toast({
         title: "Success!",
-        description: `Your personalized ${planDetails.duration}-day meal plan featuring ${formData.culturalCuisines.join(', ')} cuisines has been generated!`,
+        description: `Your personalized ${planDetails.duration}-day meal plan featuring ${formData.culturalCuisines.join(', ')} cuisines with dietary restrictions has been generated!`,
       });
 
       // Navigate to the meal plan page immediately
@@ -295,13 +302,14 @@ export const useMealPlanGeneration = (profile: any) => {
       return {
         success: true,
         mealPlanId: savedMealPlan.id,
-        message: `Culturally-diverse meal plan generated with ${uniqueMeals.size} unique meals!`,
+        message: `Culturally-diverse meal plan generated with ${uniqueMeals.size} unique meals and dietary restrictions!`,
         stats: {
           totalMeals: mealPlan.meals.length,
           uniqueMeals: uniqueMeals.size,
           targetCalories,
           goal: userProfile.goal,
           cuisines: formData.culturalCuisines,
+          dietaryRestrictions: userProfile.dietaryRestrictions,
           maxCookingTime: formData.maxCookingTime
         }
       };

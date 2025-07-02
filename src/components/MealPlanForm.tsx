@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart, Globe, ChefHat } from "lucide-react";
+import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart, Globe, ChefHat, Shield } from "lucide-react";
 
 export interface MealPlanFormData {
   planName: string;
@@ -18,6 +18,8 @@ export interface MealPlanFormData {
   culturalCuisines: string[];
   otherCuisine: string;
   maxCookingTime: string;
+  dietaryRestrictions: string[];
+  otherDietaryRestriction: string;
 }
 
 interface MealPlanFormProps {
@@ -33,7 +35,9 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
     additionalNotes: '',
     culturalCuisines: [],
     otherCuisine: '',
-    maxCookingTime: '20-40'
+    maxCookingTime: '20-40',
+    dietaryRestrictions: [],
+    otherDietaryRestriction: ''
   });
 
   const cuisineOptions = [
@@ -43,6 +47,14 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
     { id: 'indian', label: 'Indian' },
     { id: 'mediterranean', label: 'Mediterranean' },
     { id: 'thai', label: 'Thai' }
+  ];
+
+  const dietaryOptions = [
+    { id: 'vegetarian', label: 'Vegetarian' },
+    { id: 'vegan', label: 'Vegan' },
+    { id: 'gluten-free', label: 'Gluten-Free' },
+    { id: 'dairy-free', label: 'Dairy-Free' },
+    { id: 'nut-free', label: 'Nut-Free' }
   ];
 
   const cookingTimeOptions = [
@@ -58,6 +70,15 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
       culturalCuisines: checked 
         ? [...prev.culturalCuisines, cuisineId]
         : prev.culturalCuisines.filter(id => id !== cuisineId)
+    }));
+  };
+
+  const handleDietaryRestrictionChange = (restrictionId: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      dietaryRestrictions: checked 
+        ? [...prev.dietaryRestrictions, restrictionId]
+        : prev.dietaryRestrictions.filter(id => id !== restrictionId)
     }));
   };
 
@@ -135,17 +156,60 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
 
             <div className="flex items-center space-x-3 p-3 border rounded-lg">
               <Checkbox
-                id="other"
+                id="other-cuisine"
                 checked={formData.culturalCuisines.includes('other')}
                 onCheckedChange={(checked) => handleCuisineChange('other', checked as boolean)}
               />
-              <Label htmlFor="other" className="text-sm font-medium">Other:</Label>
+              <Label htmlFor="other-cuisine" className="text-sm font-medium">Other:</Label>
               <Input
                 placeholder="Specify cuisine..."
                 value={formData.otherCuisine}
                 onChange={(e) => setFormData(prev => ({ ...prev, otherCuisine: e.target.value }))}
                 className="flex-1"
                 disabled={!formData.culturalCuisines.includes('other')}
+              />
+            </div>
+          </div>
+
+          {/* Dietary Restrictions Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-5 w-5 text-purple-600" />
+              <Label className="text-base font-semibold">Dietary Restrictions</Label>
+            </div>
+            <p className="text-sm text-gray-600">Select any dietary restrictions you need to accommodate</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {dietaryOptions.map((dietary) => (
+                <div key={dietary.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-purple-50 transition-colors">
+                  <Checkbox
+                    id={dietary.id}
+                    checked={formData.dietaryRestrictions.includes(dietary.id)}
+                    onCheckedChange={(checked) => handleDietaryRestrictionChange(dietary.id, checked as boolean)}
+                  />
+                  <Label 
+                    htmlFor={dietary.id} 
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    {dietary.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+              <Checkbox
+                id="other-dietary"
+                checked={formData.dietaryRestrictions.includes('other')}
+                onCheckedChange={(checked) => handleDietaryRestrictionChange('other', checked as boolean)}
+              />
+              <Label htmlFor="other-dietary" className="text-sm font-medium">Other:</Label>
+              <Input
+                placeholder="Specify dietary restriction..."
+                value={formData.otherDietaryRestriction}
+                onChange={(e) => setFormData(prev => ({ ...prev, otherDietaryRestriction: e.target.value }))}
+                className="flex-1"
+                disabled={!formData.dietaryRestrictions.includes('other')}
               />
             </div>
           </div>
