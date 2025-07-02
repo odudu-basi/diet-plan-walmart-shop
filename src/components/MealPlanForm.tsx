@@ -7,13 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { CalendarDays, Utensils, Loader2, Clock, ShoppingCart, Globe, ChefHat } from "lucide-react";
 
 export interface MealPlanFormData {
   planName: string;
   duration: string;
   targetCalories: string;
   additionalNotes: string;
+  culturalCuisines: string[];
+  otherCuisine: string;
+  maxCookingTime: string;
 }
 
 interface MealPlanFormProps {
@@ -26,8 +30,36 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
     planName: '',
     duration: '7',
     targetCalories: '',
-    additionalNotes: ''
+    additionalNotes: '',
+    culturalCuisines: [],
+    otherCuisine: '',
+    maxCookingTime: '20-40'
   });
+
+  const cuisineOptions = [
+    { id: 'italian', label: 'Italian' },
+    { id: 'mexican', label: 'Mexican' },
+    { id: 'japanese', label: 'Japanese' },
+    { id: 'indian', label: 'Indian' },
+    { id: 'mediterranean', label: 'Mediterranean' },
+    { id: 'thai', label: 'Thai' }
+  ];
+
+  const cookingTimeOptions = [
+    { id: '10-20', label: '10-20 min', icon: '⚡' },
+    { id: '20-40', label: '20-40 min', icon: '🔥' },
+    { id: '40-60', label: '40-60 min', icon: '👨‍🍳' },
+    { id: '60+', label: '60+ min', icon: '🥘' }
+  ];
+
+  const handleCuisineChange = (cuisineId: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      culturalCuisines: checked 
+        ? [...prev.culturalCuisines, cuisineId]
+        : prev.culturalCuisines.filter(id => id !== cuisineId)
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +79,7 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-2">
             <Label htmlFor="planName">Meal Plan Name *</Label>
             <Input
@@ -75,6 +107,77 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
             </Select>
           </div>
 
+          {/* Cultural Cuisines Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Globe className="h-5 w-5 text-emerald-600" />
+              <Label className="text-base font-semibold">Cultural Cuisines</Label>
+            </div>
+            <p className="text-sm text-gray-600">Select the cuisines you'd like to include in your meal plan</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {cuisineOptions.map((cuisine) => (
+                <div key={cuisine.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-emerald-50 transition-colors">
+                  <Checkbox
+                    id={cuisine.id}
+                    checked={formData.culturalCuisines.includes(cuisine.id)}
+                    onCheckedChange={(checked) => handleCuisineChange(cuisine.id, checked as boolean)}
+                  />
+                  <Label 
+                    htmlFor={cuisine.id} 
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    {cuisine.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 border rounded-lg">
+              <Checkbox
+                id="other"
+                checked={formData.culturalCuisines.includes('other')}
+                onCheckedChange={(checked) => handleCuisineChange('other', checked as boolean)}
+              />
+              <Label htmlFor="other" className="text-sm font-medium">Other:</Label>
+              <Input
+                placeholder="Specify cuisine..."
+                value={formData.otherCuisine}
+                onChange={(e) => setFormData(prev => ({ ...prev, otherCuisine: e.target.value }))}
+                className="flex-1"
+                disabled={!formData.culturalCuisines.includes('other')}
+              />
+            </div>
+          </div>
+
+          {/* Max Cooking Time Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <ChefHat className="h-5 w-5 text-blue-600" />
+              <Label className="text-base font-semibold">Max Cooking Time</Label>
+            </div>
+            <p className="text-sm text-gray-600">Choose your preferred maximum cooking time per meal</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {cookingTimeOptions.map((option) => (
+                <Button
+                  key={option.id}
+                  type="button"
+                  variant={formData.maxCookingTime === option.id ? "default" : "outline"}
+                  className={`h-16 flex-col space-y-1 ${
+                    formData.maxCookingTime === option.id 
+                      ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                      : "hover:bg-blue-50 hover:border-blue-300"
+                  }`}
+                  onClick={() => setFormData(prev => ({ ...prev, maxCookingTime: option.id }))}
+                >
+                  <span className="text-lg">{option.icon}</span>
+                  <span className="text-sm font-medium">{option.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="targetCalories">Target Daily Calories (Optional)</Label>
             <Input
@@ -94,6 +197,7 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
               placeholder="Any specific foods you love/hate, cooking time preferences, etc."
               value={formData.additionalNotes}
               onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+              rows={3}
             />
           </div>
 
@@ -121,17 +225,17 @@ const MealPlanForm = ({ isGenerating, onSubmit }: MealPlanFormProps) => {
 
           <Button 
             type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full bg-green-600 hover:bg-green-700 h-12"
             disabled={isGenerating}
           >
             {isGenerating ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                 Generating Your Meal Plan...
               </>
             ) : (
               <>
-                <Utensils className="h-4 w-4 mr-2" />
+                <Utensils className="h-5 w-5 mr-2" />
                 Generate AI Meal Plan
               </>
             )}
