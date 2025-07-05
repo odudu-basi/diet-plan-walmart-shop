@@ -15,9 +15,9 @@ interface RevenueCatWebhookEvent {
     product_id: string;
     period_type: string;
     purchased_at_ms: number;
-    expiration_at_ms: number;
+    expiration_at_ms?: number;
     environment: string;
-    entitlement_ids: string[];
+    entitlement_ids?: string[];
   };
 }
 
@@ -40,21 +40,20 @@ serve(async (req) => {
     // Extract user ID from app_user_id (assuming it's the Supabase user ID)
     const userId = event.app_user_id;
 
-    // Update or create subscription record
-    const subscriptionData = {
-      user_id: userId,
-      product_id: event.product_id,
-      period_type: event.period_type,
-      purchased_at: new Date(event.purchased_at_ms),
-      expires_at: event.expiration_at_ms ? new Date(event.expiration_at_ms) : null,
-      environment: event.environment,
-      entitlements: event.entitlement_ids,
-      status: getSubscriptionStatus(event.type),
-      updated_at: new Date()
-    };
-
     if (event.type === 'INITIAL_PURCHASE' || event.type === 'RENEWAL') {
-      // Create or update subscription
+      // Create or update subscription record
+      const subscriptionData = {
+        user_id: userId,
+        product_id: event.product_id,
+        period_type: event.period_type.toLowerCase(),
+        purchased_at: new Date(event.purchased_at_ms).toISOString(),
+        expires_at: event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null,
+        environment: event.environment,
+        entitlements: event.entitlement_ids || [],
+        status: 'active',
+        updated_at: new Date().toISOString()
+      };
+
       const { error: upsertError } = await supabase
         .from('subscriptions')
         .upsert(subscriptionData, { 
@@ -78,6 +77,7 @@ serve(async (req) => {
 
       if (profileError) {
         console.error('Error updating profile:', profileError);
+        // Don't throw here, subscription record was created successfully
       }
 
     } else if (event.type === 'CANCELLATION' || event.type === 'EXPIRATION') {
@@ -85,16 +85,17 @@ serve(async (req) => {
       const { error: updateError } = await supabase
         .from('subscriptions')
         .update({ 
-          status: 'cancelled',
-          updated_at: new Date()
+          status: event.type === 'CANCELLATION' ? 'cancelled' : 'expired',
+          updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);
 
       if (updateError) {
         console.error('Error updating subscription:', updateError);
+        throw updateError;
       }
 
-      // Update user profile
+      // Update user profile to remove premium status
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -105,6 +106,7 @@ serve(async (req) => {
 
       if (profileError) {
         console.error('Error updating profile:', profileError);
+        // Don't throw here, subscription record was updated successfully
       }
     }
 
@@ -126,17 +128,3 @@ serve(async (req) => {
     });
   }
 });
-
-function getSubscriptionStatus(eventType: string): string {
-  switch (eventType) {
-    case 'INITIAL_PURCHASE':
-    case 'RENEWAL':
-      return 'active';
-    case 'CANCELLATION':
-      return 'cancelled';
-    case 'EXPIRATION':
-      return 'expired';
-    default:
-      return 'unknown';
-  }
-}

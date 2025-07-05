@@ -200,6 +200,8 @@ export type Database = {
           goal: string | null
           height: number | null
           id: string
+          is_premium: boolean | null
+          premium_expires_at: string | null
           updated_at: string | null
           weight: number | null
         }
@@ -215,6 +217,8 @@ export type Database = {
           goal?: string | null
           height?: number | null
           id: string
+          is_premium?: boolean | null
+          premium_expires_at?: string | null
           updated_at?: string | null
           weight?: number | null
         }
@@ -230,6 +234,8 @@ export type Database = {
           goal?: string | null
           height?: number | null
           id?: string
+          is_premium?: boolean | null
+          premium_expires_at?: string | null
           updated_at?: string | null
           weight?: number | null
         }
@@ -319,6 +325,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          entitlements: string[] | null
+          environment: string
+          expires_at: string | null
+          id: string
+          period_type: string
+          product_id: string
+          purchased_at: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entitlements?: string[] | null
+          environment: string
+          expires_at?: string | null
+          id?: string
+          period_type: string
+          product_id: string
+          purchased_at: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entitlements?: string[] | null
+          environment?: string
+          expires_at?: string | null
+          id?: string
+          period_type?: string
+          product_id?: string
+          purchased_at?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
