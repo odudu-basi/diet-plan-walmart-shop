@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,11 +18,9 @@ const ProfileSetup = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     age: '',
     weight: '',
-    targetWeight: '',
     height: '',
     goal: '',
     activityLevel: '',
@@ -62,11 +59,9 @@ const ProfileSetup = () => {
 
         if (data) {
           setFormData({
-            firstName: data.first_name || '',
-            lastName: data.last_name || '',
+            fullName: data.full_name || '',
             age: data.age?.toString() || '',
             weight: data.weight?.toString() || '',
-            targetWeight: data.target_weight?.toString() || '',
             height: data.height?.toString() || '',
             goal: data.goal || '',
             activityLevel: data.activity_level || '',
@@ -109,11 +104,9 @@ const ProfileSetup = () => {
     try {
       const profileData = {
         id: user.id,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+        full_name: formData.fullName,
         age: formData.age ? parseInt(formData.age) : null,
         weight: formData.weight ? parseFloat(formData.weight) : null,
-        target_weight: formData.targetWeight ? parseFloat(formData.targetWeight) : null,
         height: formData.height ? parseFloat(formData.height) : null,
         goal: formData.goal,
         activity_level: formData.activityLevel,
@@ -187,29 +180,18 @@ const ProfileSetup = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                  required
+                />
               </div>
 
               {/* Physical Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="age">Age</Label>
                   <Input
@@ -221,23 +203,13 @@ const ProfileSetup = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="weight">Current Weight (lbs)</Label>
+                  <Label htmlFor="weight">Weight (lbs)</Label>
                   <Input
                     id="weight"
                     type="number"
                     value={formData.weight}
                     onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
                     required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="targetWeight">Target Weight (lbs)</Label>
-                  <Input
-                    id="targetWeight"
-                    type="number"
-                    value={formData.targetWeight}
-                    onChange={(e) => setFormData(prev => ({ ...prev, targetWeight: e.target.value }))}
-                    placeholder="Optional"
                   />
                 </div>
                 <div className="space-y-2">

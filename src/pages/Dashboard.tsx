@@ -20,7 +20,7 @@ const Dashboard = () => {
       if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('full_name')
         .eq('id', user.id)
         .single();
       
@@ -103,8 +103,8 @@ const Dashboard = () => {
     );
   }
 
-  // Get display name - prefer first name from profile, fallback to email prefix
-  const displayName = profile?.first_name || user.email?.split('@')[0] || 'there';
+  // Get display name - prefer full name from profile, fallback to email prefix
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'there';
 
   return (
     <div className="min-h-screen fresh-gradient">
