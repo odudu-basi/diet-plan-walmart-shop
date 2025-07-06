@@ -2,9 +2,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type MealPlan = Database['public']['Tables']['meal_plans']['Row'];
 
 export const useMealPlans = (enabled: boolean = true) => {
   const { user } = useAuth();
@@ -21,7 +18,7 @@ export const useMealPlans = (enabled: boolean = true) => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return (data || []) as MealPlan[];
+      return data || [];
     },
     enabled: !!user && enabled
   });

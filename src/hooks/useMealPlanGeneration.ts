@@ -111,6 +111,10 @@ export const useMealPlanGeneration = (profile: any) => {
         profile.id
       );
 
+      if (!savedMealPlan?.id) {
+        throw new Error('Failed to save meal plan - no ID returned');
+      }
+
       // Step 3: Save meals and ingredients
       setProgress(60);
       setCurrentStep('Saving meal details and ingredients...');
