@@ -1,147 +1,182 @@
-
-import { useState, createContext, useContext, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
+import type { User, Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
 
-interface AuthContextType {
+interface AuthContextProps {
   user: User | null;
   session: Session | null;
-  login: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, confirmPassword: string) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ user: User | null; session: Session | null } | void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ user: User | null; session: Session | null } | void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Session retrieval error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+
+        // Handle native app auth events
+        if (Capacitor.isNativePlatform()) {
+          if (event === 'SIGNED_IN' && session) {
+            // Force a small delay to ensure state is properly set
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 100);
+          } else if (event === 'SIGNED_OUT') {
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 100);
+          }
+        }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
-
-      // Redirect to dashboard after successful login
-      window.location.href = '/dashboard';
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed';
-      setError(errorMessage);
-      toast({
-        title: "Login Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // For native apps, use different auth flow
+      if (Capacitor.isNativePlatform()) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        if (data.user) {
+          // Native apps don't need URL redirects
+          return { user: data.user, session: data.session };
+        }
+      } else {
+        // Web auth flow
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        return { user: data.user, session: data.session };
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string, confirmPassword: string) => {
+  const signUp = async (email: string, password: string, fullName?: string) => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      if (password !== confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
-
-      if (password.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
-      }
-
-      const redirectUrl = `${window.location.origin}/profile-setup`;
-
-      const { data, error } = await supabase.auth.signUp({
+      // For native apps, don't use email confirmation redirects
+      const authOptions = Capacitor.isNativePlatform() ? {
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          data: fullName ? { full_name: fullName } : undefined,
         }
-      });
+      } : {
+        email,
+        password,
+        options: {
+          data: fullName ? { full_name: fullName } : undefined,
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      };
 
+      const { data, error } = await supabase.auth.signUp(authOptions);
+      
       if (error) throw error;
-
-      toast({
-        title: "Account Created!",
-        description: "Welcome to Diet Shopping App! Please check your email to verify your account.",
-      });
-
-      // Redirect to profile setup after successful signup
-      window.location.href = '/profile-setup';
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Sign up failed';
-      setError(errorMessage);
-      toast({
-        title: "Sign Up Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      return { user: data.user, session: data.session };
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      setError(error.message);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = async () => {
+    setIsLoading(true);
     try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
-      });
-    } catch (error) {
-      console.error('Error logging out:', error);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // For native apps, force navigation
+      if (Capacitor.isNativePlatform()) {
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      }
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const value: AuthContextProps = {
+    user,
+    session,
+    login,
+    signUp,
+    logout,
+    isLoading,
+    error,
+  };
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      login,
-      signUp,
-      logout,
-      isLoading,
-      error
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -149,8 +184,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

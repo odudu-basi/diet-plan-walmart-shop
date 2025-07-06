@@ -28,18 +28,23 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: 'body',
       resizeOnFullScreen: true
+    },
+    App: {
+      deepLinkHandling: 'native'
     }
   },
   ios: {
     contentInset: 'automatic',
     scrollEnabled: true,
     backgroundColor: '#10b981',
-    allowsLinkPreview: false
+    allowsLinkPreview: false,
+    scheme: 'preppi'
   },
   android: {
     backgroundColor: '#10b981',
     allowMixedContent: true,
-    captureInput: true
+    captureInput: true,
+    scheme: 'preppi'
   }
 };
 
