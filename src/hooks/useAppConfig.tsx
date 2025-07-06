@@ -15,10 +15,10 @@ export const useAppConfig = () => {
       
       if (error) {
         console.error('Error fetching app config:', error);
-        return [] as AppConfig[];
+        return [];
       }
       
-      return data as AppConfig[] || [];
+      return data || [];
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     refetchOnWindowFocus: false,
