@@ -15,7 +15,7 @@ export const useAppConfig = () => {
       
       if (error) {
         console.error('Error fetching app config:', error);
-        return [];
+        return [] as AppConfig[];
       }
       
       return (data || []) as AppConfig[];

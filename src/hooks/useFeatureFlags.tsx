@@ -12,11 +12,11 @@ export const useFeatureFlags = () => {
       const { data, error } = await supabase
         .from('feature_flags')
         .select('*')
-        .eq('enabled', true);
+        .eq('enabled', true as any);
       
       if (error) {
         console.error('Error fetching feature flags:', error);
-        return [];
+        return [] as FeatureFlag[];
       }
       
       return (data || []) as FeatureFlag[];
