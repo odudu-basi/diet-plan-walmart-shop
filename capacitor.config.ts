@@ -2,7 +2,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.5fa6528419a4404da981c7dddafce4b7',
+  appId: 'com.odudu.cartcrafter',
   appName: 'Preppi',
   webDir: 'dist',
   server: {
