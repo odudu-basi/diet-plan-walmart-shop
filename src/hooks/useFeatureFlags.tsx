@@ -19,7 +19,7 @@ export const useFeatureFlags = () => {
         return [] as FeatureFlag[];
       }
       
-      return (data || []) as FeatureFlag[];
+      return (data as FeatureFlag[]) || [];
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: false,

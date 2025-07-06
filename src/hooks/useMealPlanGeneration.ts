@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { generateShoppingListFromMealPlan } from '@/utils/shoppingListGenerator';
 import { useNavigate } from 'react-router-dom';
+import type { Database } from "@/integrations/supabase/types";
 
 export interface UserProfile {
   age: number;
@@ -58,6 +59,10 @@ export interface MealPlanFormData {
   dietaryRestrictions: string[];
   otherDietaryRestriction: string;
 }
+
+type MealPlanInsert = Database['public']['Tables']['meal_plans']['Insert'];
+type MealInsert = Database['public']['Tables']['meals']['Insert'];
+type MealIngredientInsert = Database['public']['Tables']['meal_ingredients']['Insert'];
 
 export const useMealPlanGeneration = (profile: any) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -161,7 +166,7 @@ export const useMealPlanGeneration = (profile: any) => {
       setCurrentStep(cuisineStepMessage);
       
       console.log('Calling enhanced meal plan generation with cultural preferences and dietary restrictions...');
-      const { data: mealPlanData, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
+      const { data: generatedMealPlan, error: functionError } = await supabase.functions.invoke('generate-meal-plan', {
         body: { 
           profile: userProfile, 
           planDetails: {
@@ -177,11 +182,11 @@ export const useMealPlanGeneration = (profile: any) => {
         throw new Error(functionError.message || 'Failed to generate personalized meal plan');
       }
 
-      if (!mealPlanData || !mealPlanData.meals) {
+      if (!generatedMealPlan || !generatedMealPlan.meals) {
         throw new Error('Invalid meal plan data received from AI');
       }
 
-      const mealPlan: MealPlan = mealPlanData;
+      const mealPlan: MealPlan = generatedMealPlan;
       console.log('Received meal plan with', mealPlan.meals.length, 'meals');
 
       // Validate meal diversity and cultural alignment
@@ -201,7 +206,7 @@ export const useMealPlanGeneration = (profile: any) => {
       const endDate = new Date();
       endDate.setDate(startDate.getDate() + planDetails.duration - 1);
 
-      const mealPlanData = {
+      const mealPlanInsertData: MealPlanInsert = {
         user_id: profile.id,
         name: formData.planName || `${planDetails.duration}-Day Personalized Plan`,
         description: `AI-generated meal plan tailored for ${userProfile.goal} (${targetCalories} cal/day)`,
@@ -211,11 +216,11 @@ export const useMealPlanGeneration = (profile: any) => {
 
       const { data: savedMealPlan, error: mealPlanError } = await supabase
         .from('meal_plans')
-        .insert(mealPlanData)
+        .insert(mealPlanInsertData)
         .select()
         .single();
 
-      if (mealPlanError) {
+      if (mealPlanError || !savedMealPlan) {
         console.error('Error creating meal plan:', mealPlanError);
         throw new Error('Failed to save personalized meal plan');
       }
@@ -229,23 +234,25 @@ export const useMealPlanGeneration = (profile: any) => {
       for (const [index, meal] of mealPlan.meals.entries()) {
         console.log(`Saving meal ${index + 1}/${mealPlan.meals.length}:`, meal.name);
         
+        const mealInsertData: MealInsert = {
+          meal_plan_id: savedMealPlan.id,
+          name: meal.name,
+          meal_type: meal.type,
+          day_of_week: meal.dayOfWeek,
+          recipe_instructions: meal.instructions,
+          prep_time_minutes: meal.prepTime,
+          cook_time_minutes: meal.cookTime,
+          servings: meal.servings,
+          calories_per_serving: meal.calories,
+        };
+
         const { data: savedMeal, error: mealError } = await supabase
           .from('meals')
-          .insert({
-            meal_plan_id: savedMealPlan.id,
-            name: meal.name,
-            meal_type: meal.type,
-            day_of_week: meal.dayOfWeek,
-            recipe_instructions: meal.instructions,
-            prep_time_minutes: meal.prepTime,
-            cook_time_minutes: meal.cookTime,
-            servings: meal.servings,
-            calories_per_serving: meal.calories,
-          })
+          .insert(mealInsertData)
           .select()
           .single();
 
-        if (mealError) {
+        if (mealError || !savedMeal) {
           console.error('Error saving meal:', mealError);
           throw new Error(`Failed to save meal: ${meal.name}`);
         }
@@ -254,7 +261,7 @@ export const useMealPlanGeneration = (profile: any) => {
         if (meal.ingredients && meal.ingredients.length > 0) {
           console.log(`Saving ${meal.ingredients.length} ingredients for:`, meal.name);
           
-          const ingredientsToSave = meal.ingredients.map(ingredient => ({
+          const ingredientsToSave: MealIngredientInsert[] = meal.ingredients.map(ingredient => ({
             meal_id: savedMeal.id,
             ingredient_name: ingredient.name,
             quantity: ingredient.quantity,
