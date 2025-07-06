@@ -3,13 +3,9 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Database } from "@/integrations/supabase/types";
 
-interface MealPlan {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date: string;
-}
+type MealPlan = Database['public']['Tables']['meal_plans']['Row'];
 
 interface ShoppingListFormProps {
   listName: string;

@@ -3,6 +3,12 @@ import { useState } from 'react';
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
+
+type ShoppingListInsert = Database['public']['Tables']['shopping_lists']['Insert'];
+type ShoppingListItemInsert = Database['public']['Tables']['shopping_list_items']['Insert'];
+type Meal = Database['public']['Tables']['meals']['Row'];
+type MealIngredient = Database['public']['Tables']['meal_ingredients']['Row'];
 
 export const useShoppingListCreation = (onListCreated: () => void) => {
   const { user } = useAuth();
@@ -12,13 +18,15 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
   const createEmptyShoppingList = async (listName: string) => {
     if (!user) throw new Error('User not authenticated');
 
+    const shoppingListData: ShoppingListInsert = {
+      user_id: user.id,
+      name: listName,
+      status: 'active'
+    };
+
     const { error } = await supabase
       .from('shopping_lists')
-      .insert({
-        user_id: user.id,
-        name: listName,
-        status: 'active'
-      } as any);
+      .insert(shoppingListData);
 
     if (error) throw error;
   };
@@ -33,7 +41,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
         *,
         meal_ingredients (*)
       `)
-      .eq('meal_plan_id' as any, selectedMealPlan);
+      .eq('meal_plan_id', selectedMealPlan);
 
     if (mealsError) throw mealsError;
 
@@ -41,9 +49,9 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
     const ingredientMap = new Map();
     let totalCost = 0;
 
-    meals?.forEach(meal => {
-      const mealIngredients = (meal as any).meal_ingredients;
-      mealIngredients?.forEach((ingredient: any) => {
+    meals?.forEach((meal: Meal & { meal_ingredients: MealIngredient[] }) => {
+      const mealIngredients = meal.meal_ingredients;
+      mealIngredients?.forEach((ingredient: MealIngredient) => {
         const key = `${ingredient.ingredient_name}-${ingredient.unit}`;
         if (ingredientMap.has(key)) {
           const existing = ingredientMap.get(key);
@@ -63,15 +71,17 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
     });
 
     // Create shopping list
+    const shoppingListData: ShoppingListInsert = {
+      user_id: user.id,
+      meal_plan_id: selectedMealPlan,
+      name: listName,
+      status: 'active',
+      total_estimated_cost: totalCost
+    };
+
     const { data: shoppingList, error: listError } = await supabase
       .from('shopping_lists')
-      .insert({
-        user_id: user.id,
-        meal_plan_id: selectedMealPlan,
-        name: listName,
-        status: 'active',
-        total_estimated_cost: totalCost
-      } as any)
+      .insert(shoppingListData)
       .select()
       .single();
 
@@ -82,7 +92,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
     }
 
     // Create shopping list items
-    const items = Array.from(ingredientMap.values()).map(ingredient => ({
+    const items: ShoppingListItemInsert[] = Array.from(ingredientMap.values()).map(ingredient => ({
       shopping_list_id: shoppingList.id,
       ingredient_name: ingredient.name,
       quantity: ingredient.quantity,
@@ -94,7 +104,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
 
     const { error: itemsError } = await supabase
       .from('shopping_list_items')
-      .insert(items as any);
+      .insert(items);
 
     if (itemsError) throw itemsError;
   };

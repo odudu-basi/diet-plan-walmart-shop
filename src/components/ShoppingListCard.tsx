@@ -5,25 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import ShoppingListHeader from './ShoppingListHeader';
+import type { Database } from "@/integrations/supabase/types";
 
-interface ShoppingListItem {
-  id: string;
-  ingredient_name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  is_purchased: boolean;
-  estimated_cost: number;
-  notes: string;
-  shopping_list_id: string;
-}
-
-interface ShoppingList {
-  id: string;
-  name: string;
-  created_at: string;
+type ShoppingListItem = Database['public']['Tables']['shopping_list_items']['Row'];
+type ShoppingList = Database['public']['Tables']['shopping_lists']['Row'] & {
   shopping_list_items: ShoppingListItem[];
-}
+};
 
 interface ShoppingListCardProps {
   shoppingList: ShoppingList;
@@ -45,7 +32,7 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
       const { error } = await supabase
         .from('shopping_lists')
         .delete()
-        .eq('id' as any, shoppingList.id);
+        .eq('id', shoppingList.id);
 
       if (error) throw error;
 
@@ -78,7 +65,7 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
         totalItems={totalItems}
         purchasedItems={purchasedItems}
         progressPercentage={progressPercentage}
-        createdAt={shoppingList.created_at}
+        createdAt={shoppingList.created_at || ''}
         onDelete={handleDeleteList}
       />
     </Card>

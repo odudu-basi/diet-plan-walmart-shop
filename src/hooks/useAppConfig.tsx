@@ -1,15 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-interface AppConfig {
-  id: string;
-  key: string;
-  value: string;
-  type: 'string' | 'number' | 'boolean' | 'json';
-  description?: string;
-  updated_at: string;
-}
+type AppConfig = Database['public']['Tables']['app_config']['Row'];
 
 export const useAppConfig = () => {
   const { data: config, isLoading } = useQuery({
@@ -24,7 +18,7 @@ export const useAppConfig = () => {
         return [];
       }
       
-      return data as AppConfig[];
+      return (data || []) as AppConfig[];
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     refetchOnWindowFocus: false,

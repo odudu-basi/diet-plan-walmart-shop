@@ -201,15 +201,17 @@ export const useMealPlanGeneration = (profile: any) => {
       const endDate = new Date();
       endDate.setDate(startDate.getDate() + planDetails.duration - 1);
 
+      const mealPlanData = {
+        user_id: profile.id,
+        name: formData.planName || `${planDetails.duration}-Day Personalized Plan`,
+        description: `AI-generated meal plan tailored for ${userProfile.goal} (${targetCalories} cal/day)`,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+      };
+
       const { data: savedMealPlan, error: mealPlanError } = await supabase
         .from('meal_plans')
-        .insert({
-          user_id: profile.id,
-          name: formData.planName || `${planDetails.duration}-Day Personalized Plan`,
-          description: `AI-generated meal plan tailored for ${userProfile.goal} (${targetCalories} cal/day)`,
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-        })
+        .insert(mealPlanData)
         .select()
         .single();
 
