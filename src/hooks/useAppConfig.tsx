@@ -18,7 +18,7 @@ export const useAppConfig = () => {
         return [] as AppConfig[];
       }
       
-      return (data as AppConfig[]) || [];
+      return data as AppConfig[] || [];
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     refetchOnWindowFocus: false,

@@ -12,14 +12,14 @@ export const useFeatureFlags = () => {
       const { data, error } = await supabase
         .from('feature_flags')
         .select('*')
-        .eq('enabled', true as any);
+        .eq('enabled', true);
       
       if (error) {
         console.error('Error fetching feature flags:', error);
         return [] as FeatureFlag[];
       }
       
-      return (data as FeatureFlag[]) || [];
+      return data as FeatureFlag[] || [];
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: false,

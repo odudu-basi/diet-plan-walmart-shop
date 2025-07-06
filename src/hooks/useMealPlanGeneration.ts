@@ -206,7 +206,7 @@ export const useMealPlanGeneration = (profile: any) => {
       const endDate = new Date();
       endDate.setDate(startDate.getDate() + planDetails.duration - 1);
 
-      const mealPlanInsertData: MealPlanInsert = {
+      const mealPlanData: MealPlanInsert = {
         user_id: profile.id,
         name: formData.planName || `${planDetails.duration}-Day Personalized Plan`,
         description: `AI-generated meal plan tailored for ${userProfile.goal} (${targetCalories} cal/day)`,
@@ -216,7 +216,7 @@ export const useMealPlanGeneration = (profile: any) => {
 
       const { data: savedMealPlan, error: mealPlanError } = await supabase
         .from('meal_plans')
-        .insert(mealPlanInsertData)
+        .insert(mealPlanData)
         .select()
         .single();
 
@@ -234,7 +234,7 @@ export const useMealPlanGeneration = (profile: any) => {
       for (const [index, meal] of mealPlan.meals.entries()) {
         console.log(`Saving meal ${index + 1}/${mealPlan.meals.length}:`, meal.name);
         
-        const mealInsertData: MealInsert = {
+        const mealData: MealInsert = {
           meal_plan_id: savedMealPlan.id,
           name: meal.name,
           meal_type: meal.type,
@@ -248,7 +248,7 @@ export const useMealPlanGeneration = (profile: any) => {
 
         const { data: savedMeal, error: mealError } = await supabase
           .from('meals')
-          .insert(mealInsertData)
+          .insert(mealData)
           .select()
           .single();
 
