@@ -76,7 +76,7 @@ export const useMealPlanGeneration = (profile: any) => {
       toast({
         title: "Error",
         description: "Profile data is required to generate meal plans.",
-        variant: "destructive",
+        variant: "descriptive",
       });
       return { success: false, error: "Profile data missing" };
     }
