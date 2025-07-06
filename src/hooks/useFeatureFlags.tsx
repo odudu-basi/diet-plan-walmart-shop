@@ -1,9 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type FeatureFlag = Database['public']['Tables']['feature_flags']['Row'];
 
 export const useFeatureFlags = () => {
   const { data: featureFlags, isLoading } = useQuery({

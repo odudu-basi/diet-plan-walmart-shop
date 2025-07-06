@@ -1,9 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type AppConfig = Database['public']['Tables']['app_config']['Row'];
 
 export const useAppConfig = () => {
   const { data: config, isLoading } = useQuery({
