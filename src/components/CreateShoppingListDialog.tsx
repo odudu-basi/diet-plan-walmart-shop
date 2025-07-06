@@ -31,12 +31,12 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
       const { data, error } = await supabase
         .from('meal_plans')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
+        .eq('user_id' as any, user.id)
+        .eq('is_active' as any, true)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!user && open
   });
@@ -58,7 +58,7 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
             user_id: user.id,
             name: listName,
             status: 'active'
-          });
+          } as any);
 
         if (error) throw error;
       }
@@ -94,7 +94,7 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
         *,
         meal_ingredients (*)
       `)
-      .eq('meal_plan_id', selectedMealPlan);
+      .eq('meal_plan_id' as any, selectedMealPlan);
 
     if (mealsError) throw mealsError;
 
@@ -103,7 +103,8 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
     let totalCost = 0;
 
     meals?.forEach(meal => {
-      meal.meal_ingredients?.forEach((ingredient: any) => {
+      const mealIngredients = (meal as any).meal_ingredients;
+      mealIngredients?.forEach((ingredient: any) => {
         const key = `${ingredient.ingredient_name}-${ingredient.unit}`;
         if (ingredientMap.has(key)) {
           const existing = ingredientMap.get(key);
@@ -131,11 +132,15 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
         name: listName,
         status: 'active',
         total_estimated_cost: totalCost
-      })
+      } as any)
       .select()
       .single();
 
     if (listError) throw listError;
+
+    if (!shoppingList) {
+      throw new Error('Failed to create shopping list');
+    }
 
     // Create shopping list items
     const items = Array.from(ingredientMap.values()).map(ingredient => ({
@@ -150,7 +155,7 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
 
     const { error: itemsError } = await supabase
       .from('shopping_list_items')
-      .insert(items);
+      .insert(items as any);
 
     if (itemsError) throw itemsError;
   };

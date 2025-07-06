@@ -45,7 +45,7 @@ const ShoppingListCard = ({ shoppingList, onUpdate }: ShoppingListCardProps) => 
       const { error } = await supabase
         .from('shopping_lists')
         .delete()
-        .eq('id', shoppingList.id);
+        .eq('id' as any, shoppingList.id);
 
       if (error) throw error;
 
