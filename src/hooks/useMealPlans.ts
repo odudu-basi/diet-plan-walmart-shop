@@ -10,6 +10,7 @@ export const useMealPlans = (enabled: boolean = true) => {
     queryKey: ['meal-plans', user?.id],
     queryFn: async () => {
       if (!user) return [];
+      
       const { data, error } = await supabase
         .from('meal_plans')
         .select('*')

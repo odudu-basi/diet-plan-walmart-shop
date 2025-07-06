@@ -17,8 +17,11 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
   const [listName, setListName] = useState('');
   const [selectedMealPlan, setSelectedMealPlan] = useState('');
 
-  const { data: mealPlans } = useMealPlans(open);
+  const { data: mealPlansData } = useMealPlans(open);
   const { isCreating, handleCreateShoppingList } = useShoppingListCreation(onListCreated);
+
+  // Ensure we have a properly typed array, even if empty
+  const mealPlans = Array.isArray(mealPlansData) ? mealPlansData : [];
 
   const handleCreate = async () => {
     await handleCreateShoppingList(listName, selectedMealPlan);

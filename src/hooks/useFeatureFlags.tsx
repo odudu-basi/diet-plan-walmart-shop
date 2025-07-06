@@ -2,34 +2,47 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useFeatureFlags = () => {
-  const { data: featureFlags, isLoading } = useQuery({
-    queryKey: ['feature-flags'],
+export const useFeatureFlags = (flagName: string) => {
+  return useQuery({
+    queryKey: ['feature-flags', flagName],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('feature_flags')
         .select('*')
-        .eq('enabled', true);
+        .eq('name', flagName)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching feature flag:', error);
+        return false;
+      }
+      
+      return data?.enabled ?? false;
+    },
+  });
+};
+
+export const useAllFeatureFlags = () => {
+  return useQuery({
+    queryKey: ['all-feature-flags'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('feature_flags')
+        .select('*');
       
       if (error) {
         console.error('Error fetching feature flags:', error);
-        return [];
+        return {};
       }
       
-      return data || [];
+      const flags: Record<string, boolean> = {};
+      data?.forEach(flag => {
+        if (flag.name && typeof flag.enabled === 'boolean') {
+          flags[flag.name] = flag.enabled;
+        }
+      });
+      
+      return flags;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    refetchOnWindowFocus: false,
   });
-
-  const isFeatureEnabled = (featureName: string): boolean => {
-    if (!featureFlags) return false;
-    return featureFlags.some(flag => flag.name === featureName && flag.enabled);
-  };
-
-  return {
-    featureFlags: featureFlags || [],
-    isFeatureEnabled,
-    isLoading,
-  };
 };

@@ -2,51 +2,39 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useAppConfig = () => {
-  const { data: config, isLoading } = useQuery({
-    queryKey: ['app-config'],
+export const useAppConfig = (key: string) => {
+  return useQuery({
+    queryKey: ['app-config', key],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('app_config')
-        .select('*');
+        .select('*')
+        .eq('key', key)
+        .single();
       
       if (error) {
         console.error('Error fetching app config:', error);
-        return [];
+        return null;
       }
       
-      return data || [];
-    },
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
-    refetchOnWindowFocus: false,
-  });
+      if (!data) {
+        return null;
+      }
 
-  const getConfigValue = (key: string, defaultValue: any = null) => {
-    if (!config) return defaultValue;
-    
-    const configItem = config.find(item => item.key === key);
-    if (!configItem) return defaultValue;
-    
-    // Parse value based on type
-    switch (configItem.type) {
-      case 'boolean':
-        return configItem.value === 'true';
-      case 'number':
-        return parseFloat(configItem.value);
-      case 'json':
+      // Parse the value based on type
+      if (data.type === 'boolean') {
+        return data.value === 'true';
+      } else if (data.type === 'number') {
+        return parseFloat(data.value);
+      } else if (data.type === 'json') {
         try {
-          return JSON.parse(configItem.value);
+          return JSON.parse(data.value);
         } catch {
-          return defaultValue;
+          return data.value;
         }
-      default:
-        return configItem.value;
-    }
-  };
-
-  return {
-    config: config || [],
-    getConfigValue,
-    isLoading,
-  };
+      } else {
+        return data.value;
+      }
+    },
+  });
 };

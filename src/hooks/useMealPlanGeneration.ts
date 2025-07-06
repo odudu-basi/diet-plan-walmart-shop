@@ -15,6 +15,7 @@ import {
   saveMealPlanToDatabase, 
   saveMealsToDatabase 
 } from '@/services/mealPlanService';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useMealPlanGeneration = (profile: any) => {
   const [isGenerating, setIsGenerating] = useState(false);
