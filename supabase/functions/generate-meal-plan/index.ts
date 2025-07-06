@@ -19,22 +19,47 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting meal plan generation...');
+    
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+      console.error('OpenAI API key not found in environment variables');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to Supabase secrets.',
+        type: 'ConfigurationError'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const requestBody = await req.json();
+    console.log('Request received:', JSON.stringify(requestBody, null, 2));
+    
     const { profile, planDetails }: { profile: UserProfile; planDetails: PlanDetails } = requestBody;
 
     console.log('Processing meal plan request for duration:', planDetails.duration);
 
     // Validate required data
     if (!profile || !planDetails) {
-      throw new Error('Missing profile or plan details');
+      console.error('Missing profile or plan details');
+      return new Response(JSON.stringify({ 
+        error: 'Missing profile or plan details',
+        type: 'ValidationError'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (!profile.age || !profile.weight || !profile.height || !profile.goal) {
-      throw new Error('Incomplete profile data - missing age, weight, height, or goal');
+      console.error('Incomplete profile data:', profile);
+      return new Response(JSON.stringify({ 
+        error: 'Incomplete profile data - missing age, weight, height, or goal',
+        type: 'ValidationError'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Calculate BMR and daily calorie needs
@@ -57,9 +82,24 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in generate-meal-plan function:', error);
     
+    let errorMessage = 'Failed to generate meal plan';
+    let errorType = 'UnknownError';
+    
+    if (error.message?.includes('API key')) {
+      errorMessage = 'OpenAI API key is invalid or missing';
+      errorType = 'AuthenticationError';
+    } else if (error.message?.includes('quota')) {
+      errorMessage = 'OpenAI API quota exceeded';
+      errorType = 'QuotaError';
+    } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      errorMessage = 'Network error connecting to OpenAI';
+      errorType = 'NetworkError';
+    }
+    
     return new Response(JSON.stringify({ 
-      error: error.message || 'Failed to generate meal plan',
-      type: error.constructor.name 
+      error: errorMessage,
+      type: errorType,
+      details: error.message || 'Unknown error occurred'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
