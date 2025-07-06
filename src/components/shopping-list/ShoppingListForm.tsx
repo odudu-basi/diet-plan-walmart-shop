@@ -3,9 +3,15 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Database } from "@/integrations/supabase/types";
 
-type MealPlan = Database['public']['Tables']['meal_plans']['Row'];
+// Use a simple interface instead of the complex Supabase type
+interface MealPlan {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  [key: string]: any;
+}
 
 interface ShoppingListFormProps {
   listName: string;

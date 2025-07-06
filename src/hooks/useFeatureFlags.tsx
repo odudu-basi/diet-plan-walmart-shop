@@ -37,7 +37,7 @@ export const useAllFeatureFlags = () => {
       
       const flags: Record<string, boolean> = {};
       data?.forEach(flag => {
-        if (flag.name && typeof flag.enabled === 'boolean') {
+        if (flag && flag.name && typeof flag.enabled === 'boolean') {
           flags[flag.name] = flag.enabled;
         }
       });
@@ -45,4 +45,19 @@ export const useAllFeatureFlags = () => {
       return flags;
     },
   });
+};
+
+// Helper hook for easier feature flag checking
+export const useFeatureFlagsHelper = () => {
+  const { data: allFlags = {}, isLoading } = useAllFeatureFlags();
+  
+  const isFeatureEnabled = (flagName: string): boolean => {
+    return allFlags[flagName] ?? false;
+  };
+
+  return {
+    isFeatureEnabled,
+    isLoading,
+    allFlags
+  };
 };

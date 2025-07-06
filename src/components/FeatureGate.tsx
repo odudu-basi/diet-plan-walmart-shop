@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useFeatureFlagsHelper } from '@/hooks/useFeatureFlags';
 import { useRevenueCat } from '@/hooks/useRevenueCat';
 import PremiumGate from '@/components/PremiumGate';
 
@@ -19,7 +19,7 @@ const FeatureGate = ({
   requiresPremium = false,
   premiumDescription 
 }: FeatureGateProps) => {
-  const { isFeatureEnabled, isLoading } = useFeatureFlags();
+  const { isFeatureEnabled, isLoading } = useFeatureFlagsHelper();
   const { isPremium } = useRevenueCat();
 
   if (isLoading) {

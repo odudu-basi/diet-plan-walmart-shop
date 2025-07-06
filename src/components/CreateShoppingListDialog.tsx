@@ -20,8 +20,8 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
   const { data: mealPlansData } = useMealPlans(open);
   const { isCreating, handleCreateShoppingList } = useShoppingListCreation(onListCreated);
 
-  // Ensure we have a properly typed array, even if empty
-  const mealPlans = Array.isArray(mealPlansData) ? mealPlansData : [];
+  // Safely handle the meal plans data
+  const mealPlans = mealPlansData || [];
 
   const handleCreate = async () => {
     await handleCreateShoppingList(listName, selectedMealPlan);

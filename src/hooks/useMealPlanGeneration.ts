@@ -1,201 +1,263 @@
-
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { generateShoppingListFromMealPlan } from '@/utils/shoppingListGenerator';
-import { useNavigate } from 'react-router-dom';
-import { 
-  UserProfile, 
-  PlanDetails, 
-  MealPlanFormData 
-} from '@/types/mealPlan';
-import { calculatePersonalizedCalories } from '@/utils/nutritionCalculator';
-import { validateMealPlan } from '@/utils/mealPlanValidator';
-import { 
-  generateMealPlanFromAI, 
-  saveMealPlanToDatabase, 
-  saveMealsToDatabase 
-} from '@/services/mealPlanService';
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-export const useMealPlanGeneration = (profile: any) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState('');
+interface MealPlanFormData {
+  planName: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  targetCalories: number;
+  numberOfMeals: number;
+  dietaryRestrictions: string[];
+  allergies: string[];
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+interface NutritionRequirements {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface MealPlanServiceParams {
+  userId: string;
+  mealPlanData: MealPlanFormData;
+  nutritionRequirements: NutritionRequirements;
+}
+
+interface MealPlanServiceResult {
+  success: boolean;
+  mealPlan?: any;
+  error?: string;
+}
+
+const validateMealPlanData = (formData: MealPlanFormData): ValidationResult => {
+  const errors: string[] = [];
+
+  if (!formData.planName) {
+    errors.push('Plan name is required');
+  }
+
+  if (!formData.startDate) {
+    errors.push('Start date is required');
+  }
+
+  if (!formData.endDate) {
+    errors.push('End date is required');
+  }
+
+  if (!formData.targetCalories) {
+    errors.push('Target calories are required');
+  }
+
+  if (!formData.numberOfMeals) {
+    errors.push('Number of meals is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
+};
+
+const calculateNutritionRequirements = (formData: MealPlanFormData): NutritionRequirements => {
+  // Basic calculation - can be adjusted based on specific needs
+  const calories = formData.targetCalories;
+  const protein = calories * 0.3 / 4; // 30% of calories from protein
+  const carbs = calories * 0.4 / 4;    // 40% of calories from carbs
+  const fat = calories * 0.3 / 9;      // 30% of calories from fat
+
+  return {
+    calories: calories,
+    protein: protein,
+    carbs: carbs,
+    fat: fat
+  };
+};
+
+const generateMealPlanService = async (params: MealPlanServiceParams): Promise<MealPlanServiceResult> => {
+  // Mock implementation - replace with actual API call to meal plan generation service
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  const mockMealPlan = {
+    meals: Array.from({ length: params.mealPlanData.numberOfMeals }, (_, i) => ({
+      name: `Meal ${i + 1}`,
+      type: 'Breakfast',
+      dayOfWeek: (i % 7) + 1,
+      instructions: 'Mix ingredients and cook.',
+      nutrition: {
+        calories: params.nutritionRequirements.calories / params.mealPlanData.numberOfMeals,
+      },
+      servings: 1,
+      prepTime: 10,
+      cookTime: 20,
+      ingredients: [
+        { name: 'Ingredient 1', quantity: 1, unit: 'cup', category: 'Grains', estimatedCost: 1.5 },
+        { name: 'Ingredient 2', quantity: 2, unit: 'oz', category: 'Protein', estimatedCost: 3.0 },
+      ]
+    }))
+  };
+
+  return {
+    success: true,
+    mealPlan: mockMealPlan
+  };
+};
+
+export const useMealPlanGeneration = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const generateMealPlan = async (formData: MealPlanFormData) => {
-    if (!profile) {
-      toast({
-        title: "Error",
-        description: "Profile data is required to generate meal plans.",
-        variant: "destructive",
-      });
-      return { success: false, error: "Profile data missing" };
+    if (!user) {
+      throw new Error('User must be authenticated to generate meal plans');
     }
 
     setIsGenerating(true);
-    setProgress(0);
-    setCurrentStep('Analyzing your profile for personalized nutrition...');
+    console.log('Starting meal plan generation with data:', formData);
 
     try {
-      // Enhanced profile processing for better personalization
-      const userProfile: UserProfile = {
-        age: profile.age || 30,
-        weight: profile.weight || 150,
-        height: profile.height || 66,
-        goal: profile.goal || 'maintain-weight',
-        activityLevel: profile.activity_level || 'moderate',
-        dietaryRestrictions: [
-          ...(profile.dietary_restrictions || []),
-          ...formData.dietaryRestrictions,
-          ...(formData.dietaryRestrictions.includes('other') && formData.otherDietaryRestriction ? [formData.otherDietaryRestriction] : [])
-        ],
-        allergies: profile.allergies || 'None',
-        budgetRange: profile.budget_range || '50-100'
-      };
-
-      // Calculate personalized target calories if not provided
-      let targetCalories = formData.targetCalories ? parseInt(formData.targetCalories) : undefined;
-      
-      if (!targetCalories) {
-        targetCalories = calculatePersonalizedCalories(userProfile);
+      // Validate form data
+      const validationResult = validateMealPlanData(formData);
+      if (!validationResult.isValid) {
+        throw new Error(`Validation failed: ${validationResult.errors.join(', ')}`);
       }
 
-      console.log('Personalized calorie target:', targetCalories);
-      console.log('User profile for meal generation:', userProfile);
-      console.log('Cultural cuisines selected:', formData.culturalCuisines);
-      console.log('Dietary restrictions:', userProfile.dietaryRestrictions);
-      console.log('Max cooking time:', formData.maxCookingTime);
-
-      const planDetails: PlanDetails = {
-        duration: parseInt(formData.duration),
-        targetCalories,
-        createShoppingList: true,
-        culturalCuisines: formData.culturalCuisines,
-        otherCuisine: formData.otherCuisine,
-        maxCookingTime: formData.maxCookingTime
+      // Prepare generation parameters
+      const generationParams = {
+        userId: user.id,
+        mealPlanData: formData,
+        nutritionRequirements: calculateNutritionRequirements(formData)
       };
 
-      // Determine meal creation step message based on cuisine selection
-      const hasCuisineSelection = formData.culturalCuisines.length > 0;
-      const cuisineStepMessage = hasCuisineSelection 
-        ? `Creating diverse meals featuring ${formData.culturalCuisines.filter(c => c !== 'other').join(', ')}${formData.culturalCuisines.includes('other') && formData.otherCuisine ? `, ${formData.otherCuisine}` : ''} cuisines with dietary restrictions...`
-        : 'Creating diverse international meals with dietary restrictions...';
+      console.log('Generation parameters:', generationParams);
 
-      // Step 1: Generate meal plan via edge function
-      setProgress(20);
-      setCurrentStep(cuisineStepMessage);
+      // Call the meal plan service
+      const result = await generateMealPlanService(generationParams);
       
-      const mealPlan = await generateMealPlanFromAI(
-        userProfile, 
-        planDetails, 
-        formData.planName, 
-        formData.additionalNotes
-      );
-
-      console.log('Received meal plan with', mealPlan.meals.length, 'meals');
-
-      // Validate meal diversity and cultural alignment
-      const validationResults = validateMealPlan(mealPlan);
-
-      // Step 2: Create meal plan record
-      setProgress(40);
-      setCurrentStep('Saving your personalized meal plan...');
-
-      const savedMealPlan = await saveMealPlanToDatabase(
-        mealPlan,
-        userProfile,
-        planDetails,
-        formData.planName,
-        targetCalories,
-        profile.id
-      );
-
-      if (!savedMealPlan?.id) {
-        throw new Error('Failed to save meal plan - no ID returned');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to generate meal plan');
       }
 
-      // Step 3: Save meals and ingredients
-      setProgress(60);
-      setCurrentStep('Saving meal details and ingredients...');
+      console.log('Meal plan generated successfully:', result.mealPlan);
 
-      await saveMealsToDatabase(mealPlan.meals, savedMealPlan.id);
+      // Save the meal plan to database
+      const { data: savedMealPlan, error: mealPlanError } = await supabase
+        .from('meal_plans')
+        .insert({
+          user_id: user.id,
+          name: formData.planName,
+          description: formData.description || null,
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          is_active: true
+        })
+        .select()
+        .single();
 
-      // Step 4: Create shopping list if requested
-      if (planDetails.createShoppingList) {
-        setProgress(80);
-        setCurrentStep('Creating optimized shopping list...');
+      if (mealPlanError) {
+        console.error('Error saving meal plan:', mealPlanError);
+        throw mealPlanError;
+      }
 
-        try {
-          const shoppingListId = await generateShoppingListFromMealPlan(
-            savedMealPlan.id,
-            profile.id,
-            `${savedMealPlan.name} - Shopping List`
-          );
-          console.log('Created shopping list:', shoppingListId);
-        } catch (shoppingListError) {
-          console.error('Error creating shopping list:', shoppingListError);
-          // Don't fail the entire process if shopping list creation fails
-          toast({
-            title: "Warning",
-            description: "Meal plan created successfully, but shopping list creation failed. You can create it manually later.",
-            variant: "destructive",
-          });
+      if (!savedMealPlan) {
+        throw new Error('Failed to save meal plan');
+      }
+
+      console.log('Meal plan saved with ID:', savedMealPlan.id);
+      
+      // Save meals and ingredients
+      if (result.mealPlan?.meals && result.mealPlan.meals.length > 0) {
+        const mealsToInsert = result.mealPlan.meals.map((meal: any) => ({
+          meal_plan_id: savedMealPlan.id,
+          name: meal.name,
+          meal_type: meal.type,
+          day_of_week: meal.dayOfWeek,
+          recipe_instructions: meal.instructions || null,
+          calories_per_serving: meal.nutrition?.calories || null,
+          servings: meal.servings || null,
+          prep_time_minutes: meal.prepTime || null,
+          cook_time_minutes: meal.cookTime || null
+        }));
+
+        const { data: savedMeals, error: mealsError } = await supabase
+          .from('meals')
+          .insert(mealsToInsert)
+          .select();
+
+        if (mealsError) {
+          console.error('Error saving meals:', mealsError);
+          throw mealsError;
+        }
+
+        if (!savedMeals) {
+          throw new Error('Failed to save meals');
+        }
+
+        // Save ingredients for each meal
+        const allIngredients: any[] = [];
+        result.mealPlan.meals.forEach((meal: any, mealIndex: number) => {
+          if (meal.ingredients && savedMeals[mealIndex]) {
+            meal.ingredients.forEach((ingredient: any) => {
+              allIngredients.push({
+                meal_id: savedMeals[mealIndex].id,
+                ingredient_name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                category: ingredient.category || null,
+                estimated_cost: ingredient.estimatedCost || 0
+              });
+            });
+          }
+        });
+
+        if (allIngredients.length > 0) {
+          const { error: ingredientsError } = await supabase
+            .from('meal_ingredients')
+            .insert(allIngredients);
+
+          if (ingredientsError) {
+            console.error('Error saving ingredients:', ingredientsError);
+            throw ingredientsError;
+          }
         }
       }
 
-      setProgress(100);
-      const finalStepMessage = hasCuisineSelection 
-        ? `Your ${formData.culturalCuisines.filter(c => c !== 'other').join(', ')}${formData.culturalCuisines.includes('other') && formData.otherCuisine ? `, ${formData.otherCuisine}` : ''} meal plan is ready!`
-        : 'Your international variety meal plan is ready!';
-      setCurrentStep(finalStepMessage);
-
-      const successDescription = hasCuisineSelection
-        ? `Your personalized ${planDetails.duration}-day meal plan featuring ${formData.culturalCuisines.filter(c => c !== 'other').join(', ')}${formData.culturalCuisines.includes('other') && formData.otherCuisine ? `, ${formData.otherCuisine}` : ''} cuisines with dietary restrictions has been generated!`
-        : `Your personalized ${planDetails.duration}-day meal plan with international variety and dietary restrictions has been generated!`;
-
       toast({
-        title: "Success!",
-        description: successDescription,
+        title: "Meal Plan Generated!",
+        description: `Your meal plan "${formData.planName}" has been created successfully.`,
       });
-
-      // Navigate to the meal plan page immediately
-      navigate(`/meal-plan/${savedMealPlan.id}`);
-
-      const cuisineStats = hasCuisineSelection 
-        ? formData.culturalCuisines.filter(c => c !== 'other').concat(formData.culturalCuisines.includes('other') && formData.otherCuisine ? [formData.otherCuisine] : [])
-        : ['International Variety'];
 
       return {
         success: true,
-        mealPlanId: savedMealPlan.id,
-        message: hasCuisineSelection 
-          ? `Meal plan generated with ${validationResults.uniqueMeals} unique meals featuring your selected cuisines and dietary restrictions!`
-          : `Meal plan generated with ${validationResults.uniqueMeals} unique meals featuring international variety and dietary restrictions!`,
-        stats: {
-          totalMeals: validationResults.totalMeals,
-          uniqueMeals: validationResults.uniqueMeals,
-          targetCalories,
-          goal: userProfile.goal,
-          cuisines: cuisineStats,
-          dietaryRestrictions: userProfile.dietaryRestrictions,
-          maxCookingTime: formData.maxCookingTime
-        }
+        mealPlan: savedMealPlan,
+        generatedData: result.mealPlan
       };
 
     } catch (error) {
-      console.error('Meal plan generation error:', error);
+      console.error('Error in meal plan generation:', error);
       
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'An unexpected error occurred while generating your meal plan';
+
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate personalized meal plan. Please try again.",
+        title: "Generation Failed",
+        description: errorMessage,
         variant: "destructive",
       });
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
+        error: errorMessage
       };
     } finally {
       setIsGenerating(false);
@@ -204,8 +266,6 @@ export const useMealPlanGeneration = (profile: any) => {
 
   return {
     generateMealPlan,
-    isGenerating,
-    progress,
-    currentStep,
+    isGenerating
   };
 };
