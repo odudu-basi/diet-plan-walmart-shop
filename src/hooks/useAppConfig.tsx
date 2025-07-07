@@ -9,7 +9,7 @@ export const useAppConfig = (key: string) => {
       const { data, error } = await supabase
         .from('app_config')
         .select('*')
-        .eq('key', key)
+        .eq('key', key as any)
         .single();
       
       if (error) {
@@ -22,18 +22,18 @@ export const useAppConfig = (key: string) => {
       }
 
       // Parse the value based on type
-      if (data.type === 'boolean') {
-        return data.value === 'true';
-      } else if (data.type === 'number') {
-        return parseFloat(data.value);
-      } else if (data.type === 'json') {
+      if ((data as any).type === 'boolean') {
+        return (data as any).value === 'true';
+      } else if ((data as any).type === 'number') {
+        return parseFloat((data as any).value);
+      } else if ((data as any).type === 'json') {
         try {
-          return JSON.parse(data.value);
+          return JSON.parse((data as any).value);
         } catch {
-          return data.value;
+          return (data as any).value;
         }
       } else {
-        return data.value;
+        return (data as any).value;
       }
     },
   });

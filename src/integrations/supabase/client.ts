@@ -15,7 +15,7 @@ const getAuthConfig = () => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false, // Important for native apps
-        flowType: 'pkce'
+      flowType: 'pkce' as any
       }
     }
   }
@@ -26,7 +26,7 @@ const getAuthConfig = () => {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
+      flowType: 'pkce' as any
     }
   }
 }

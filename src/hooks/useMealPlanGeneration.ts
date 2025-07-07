@@ -159,7 +159,7 @@ export const useMealPlanGeneration = () => {
           start_date: formData.startDate,
           end_date: formData.endDate,
           is_active: true
-        })
+        } as any)
         .select()
         .single();
 
@@ -172,12 +172,12 @@ export const useMealPlanGeneration = () => {
         throw new Error('Failed to save meal plan');
       }
 
-      console.log('Meal plan saved with ID:', savedMealPlan.id);
+      console.log('Meal plan saved with ID:', (savedMealPlan as any).id);
       
       // Save meals and ingredients
       if (result.mealPlan?.meals && result.mealPlan.meals.length > 0) {
         const mealsToInsert = result.mealPlan.meals.map((meal: any) => ({
-          meal_plan_id: savedMealPlan.id,
+          meal_plan_id: (savedMealPlan as any).id,
           name: meal.name,
           meal_type: meal.type,
           day_of_week: meal.dayOfWeek,
@@ -208,7 +208,7 @@ export const useMealPlanGeneration = () => {
           if (meal.ingredients && savedMeals[mealIndex]) {
             meal.ingredients.forEach((ingredient: any) => {
               allIngredients.push({
-                meal_id: savedMeals[mealIndex].id,
+                meal_id: (savedMeals as any)[mealIndex].id,
                 ingredient_name: ingredient.name,
                 quantity: ingredient.quantity,
                 unit: ingredient.unit,

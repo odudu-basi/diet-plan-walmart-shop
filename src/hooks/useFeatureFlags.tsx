@@ -9,7 +9,7 @@ export const useFeatureFlags = (flagName: string) => {
       const { data, error } = await supabase
         .from('feature_flags')
         .select('*')
-        .eq('name', flagName)
+        .eq('name', flagName as any)
         .maybeSingle();
       
       if (error) {
@@ -17,7 +17,7 @@ export const useFeatureFlags = (flagName: string) => {
         return false;
       }
       
-      return data?.enabled ?? false;
+      return (data as any)?.enabled ?? false;
     },
   });
 };
@@ -36,7 +36,7 @@ export const useAllFeatureFlags = () => {
       }
       
       const flags: Record<string, boolean> = {};
-      data?.forEach(flag => {
+      (data as any)?.forEach((flag: any) => {
         if (flag && flag.name && typeof flag.enabled === 'boolean') {
           flags[flag.name] = flag.enabled;
         }

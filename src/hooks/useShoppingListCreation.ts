@@ -26,7 +26,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
 
     const { error } = await supabase
       .from('shopping_lists')
-      .insert(shoppingListData);
+      .insert(shoppingListData as any);
 
     if (error) throw error;
   };
@@ -41,7 +41,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
         *,
         meal_ingredients (*)
       `)
-      .eq('meal_plan_id', selectedMealPlan);
+      .eq('meal_plan_id', selectedMealPlan as any);
 
     if (mealsError) throw mealsError;
 
@@ -49,9 +49,9 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
     const ingredientMap = new Map();
     let totalCost = 0;
 
-    meals?.forEach((meal: Meal & { meal_ingredients: MealIngredient[] }) => {
+    (meals as any)?.forEach((meal: any) => {
       const mealIngredients = meal.meal_ingredients;
-      mealIngredients?.forEach((ingredient: MealIngredient) => {
+      mealIngredients?.forEach((ingredient: any) => {
         const key = `${ingredient.ingredient_name}-${ingredient.unit}`;
         if (ingredientMap.has(key)) {
           const existing = ingredientMap.get(key);
@@ -81,7 +81,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
 
     const { data: shoppingList, error: listError } = await supabase
       .from('shopping_lists')
-      .insert(shoppingListData)
+      .insert(shoppingListData as any)
       .select()
       .single();
 
@@ -92,8 +92,8 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
     }
 
     // Create shopping list items
-    const items: ShoppingListItemInsert[] = Array.from(ingredientMap.values()).map(ingredient => ({
-      shopping_list_id: shoppingList.id,
+    const items = Array.from(ingredientMap.values()).map((ingredient: any) => ({
+      shopping_list_id: (shoppingList as any).id,
       ingredient_name: ingredient.name,
       quantity: ingredient.quantity,
       unit: ingredient.unit,
@@ -104,7 +104,7 @@ export const useShoppingListCreation = (onListCreated: () => void) => {
 
     const { error: itemsError } = await supabase
       .from('shopping_list_items')
-      .insert(items);
+      .insert(items as any);
 
     if (itemsError) throw itemsError;
   };

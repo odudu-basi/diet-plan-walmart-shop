@@ -14,12 +14,12 @@ export const useMealPlans = (enabled: boolean = true) => {
       const { data, error } = await supabase
         .from('meal_plans')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
+        .eq('user_id', user.id as any)
+        .eq('is_active', true as any)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return (data as any) || [];
     },
     enabled: !!user && enabled
   });

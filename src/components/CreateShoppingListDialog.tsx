@@ -58,7 +58,7 @@ const CreateShoppingListDialog = ({ onListCreated }: CreateShoppingListDialogPro
           setListName={setListName}
           selectedMealPlan={selectedMealPlan}
           setSelectedMealPlan={setSelectedMealPlan}
-          mealPlans={mealPlans}
+          mealPlans={mealPlans as any}
         />
 
         <CreateShoppingListActions

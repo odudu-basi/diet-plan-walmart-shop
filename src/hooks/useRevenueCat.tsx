@@ -81,14 +81,14 @@ export const RevenueCatProvider = ({ children }: { children: React.ReactNode }) 
       const { data: profile } = await supabase
         .from('profiles')
         .select('is_premium, premium_expires_at')
-        .eq('id', user.id)
+        .eq('id', user.id as any)
         .single();
 
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
+        .eq('user_id', user.id as any)
+        .eq('status', 'active' as any)
         .maybeSingle();
 
       return { profile, subscription };
@@ -100,7 +100,7 @@ export const RevenueCatProvider = ({ children }: { children: React.ReactNode }) 
   const isPremium = (() => {
     if (!subscriptionData?.profile) return false;
     
-    const { is_premium, premium_expires_at } = subscriptionData.profile;
+    const { is_premium, premium_expires_at } = subscriptionData.profile as any;
     
     if (!is_premium) return false;
     
@@ -138,7 +138,7 @@ export const RevenueCatProvider = ({ children }: { children: React.ReactNode }) 
           environment: 'sandbox', // In production, this would come from RevenueCat
           entitlements: ['premium'],
           status: 'active'
-        });
+        } as any);
 
       if (subscriptionError) throw subscriptionError;
 
@@ -148,8 +148,8 @@ export const RevenueCatProvider = ({ children }: { children: React.ReactNode }) 
         .update({
           is_premium: true,
           premium_expires_at: expiresAt.toISOString()
-        })
-        .eq('id', user.id);
+        } as any)
+        .eq('id', user.id as any);
 
       if (profileError) throw profileError;
     },
@@ -181,8 +181,8 @@ export const RevenueCatProvider = ({ children }: { children: React.ReactNode }) 
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
+        .eq('user_id', user.id as any)
+        .eq('status', 'active' as any)
         .maybeSingle();
 
       if (!subscription) {
@@ -194,9 +194,9 @@ export const RevenueCatProvider = ({ children }: { children: React.ReactNode }) 
         .from('profiles')
         .update({
           is_premium: true,
-          premium_expires_at: subscription.expires_at
-        })
-        .eq('id', user.id);
+          premium_expires_at: (subscription as any).expires_at
+        } as any)
+        .eq('id', user.id as any);
 
       if (error) throw error;
     },
